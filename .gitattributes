@@ -1,2 +1,9 @@
-*.jar filter=lfs diff=lfs merge=lfs -text
-*.mp3 filter=lfs diff=lfs merge=lfs -text
+# Normalize all text files to LF on commit / checkout
+* text=auto eol=lf
+
+# Treat images & audio as binary
+*.{png,jpg,jpeg,gif,svg,ico} binary
+*.{mp3,ogg,wav,flac}        binary
+
+# Prevent diffing ZIP-like archives or plugin JARs
+*.{jar,zip,tar.gz,tgz}      binary
