@@ -1,1 +1,2 @@
-rootProject.name = "backend"
+rootProject.name = "gamma-tunes"
+include("backend")
