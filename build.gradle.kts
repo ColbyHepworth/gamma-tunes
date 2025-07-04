@@ -75,7 +75,7 @@ dependencies {
     "integrationTestImplementation"("org.testcontainers:junit-jupiter")
     "integrationTestImplementation"("com.redis:testcontainers-redis:$redisTcVersion")
     "integrationTestImplementation"("io.rest-assured:rest-assured:5.4.0")
-    "integrationTestImplementation"("org.awaitility:awaitility:4.2.0")
+    "integrationTestImplementation"("org.awaitility:awaitility:4.3.0")
 }
 
 tasks.withType<Test> { useJUnitPlatform() }
