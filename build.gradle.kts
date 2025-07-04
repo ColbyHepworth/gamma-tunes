@@ -74,7 +74,7 @@ dependencies {
     "integrationTestImplementation"(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
     "integrationTestImplementation"("org.testcontainers:junit-jupiter")
     "integrationTestImplementation"("com.redis:testcontainers-redis:$redisTcVersion")
-    "integrationTestImplementation"("io.rest-assured:rest-assured:5.4.0")
+    "integrationTestImplementation"("io.rest-assured:rest-assured:5.5.5")
     "integrationTestImplementation"("org.awaitility:awaitility:4.2.0")
 }
 
