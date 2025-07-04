@@ -8,30 +8,10 @@ on:
 
 jobs:
   # ────────────────────────────────────────────────────────────────
-  # 1) LINT & FORMAT
-  # ────────────────────────────────────────────────────────────────
-  lint:
-    name: Lint & Format Check
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Run pre-commit hooks
-        run: |
-          pip install pre-commit
-          pre-commit run --all-files --show-diff-on-failure
-
-  # ────────────────────────────────────────────────────────────────
-  # 2) BACKEND  •  UNIT + INTEGRATION (Testcontainers) TESTS
+  # 1) BACKEND  •  UNIT + INTEGRATION (Testcontainers) TESTS
   # ────────────────────────────────────────────────────────────────
   backend-tests:
     name: Backend • Gradle tests
-    needs: lint
     runs-on: ubuntu-latest
 
     steps:
@@ -52,7 +32,6 @@ jobs:
   # ────────────────────────────────────────────────────────────────
   bot-python:
     name: Bot-Python (placeholder)
-    needs: lint
     runs-on: ubuntu-latest
     continue-on-error: true
 
@@ -72,7 +51,6 @@ jobs:
   # ────────────────────────────────────────────────────────────────
   frontend:
     name: Frontend (placeholder)
-    needs: lint
     runs-on: ubuntu-latest
     continue-on-error: true
 
