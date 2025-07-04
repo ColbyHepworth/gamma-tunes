@@ -55,7 +55,7 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Pull backend image
-        run: docker pull ghcr.io/${{ github.repository }}/backend:latest
+        run: docker pull ghcr.io/colbyhepworth/gamma-tunes/backend:latest
 
       - name: Start docker-compose stack
         run: docker compose up -d
