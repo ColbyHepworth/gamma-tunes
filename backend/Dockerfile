@@ -7,8 +7,9 @@ ENV GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx512m"
 COPY gradlew .
 COPY gradle/ gradle
 COPY build.gradle.kts settings.gradle.kts gradle.properties ./
-
 COPY backend/src ./backend/src
+
+RUN chmod +x gradlew
 
 RUN ./gradlew clean bootJar --no-daemon -x test
 
