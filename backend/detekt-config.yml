@@ -1,0 +1,8 @@
+# A baseline configuration for detekt to reduce noise on first run.
+style:
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    maxLineLength: 120
+  ReturnCount:
+    max: 3

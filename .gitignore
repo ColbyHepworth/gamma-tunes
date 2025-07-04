@@ -1,24 +1,28 @@
-HELP.md
-.gradle
+# ─────────────────────────────
+# 1\. Gradle / build artifacts
+# ─────────────────────────────
+.gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### STS ###
-.apt_generated
+# ─────────────────────────────
+# 2\. IDE metadata
+# ─────────────────────────────
+.apt_generated/
 .classpath
 .factorypath
 .project
-.settings
-.springBeans
-.sts4-cache
+.settings/
+.springBeans/
+.sts4-cache/
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
-### IntelliJ IDEA ###
-.idea
+## IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -26,12 +30,24 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+# ─────────────────────────────
+# 3\. Operating-system noise
+# ─────────────────────────────
+.DS_Store
+Thumbs.db
 
-### VS Code ###
-.vscode/
+# ─────────────────────────────
+# 4\. Docker / Compose run-time
+# ─────────────────────────────
+docker-compose-logs/
+**/tmpmounts/
+*.pid
+
+# ─────────────────────────────
+# 5\. Secrets & local-only config
+# ─────────────────────────────
+.env
+application-local.yml
+*.key
+*.pem
+HELP.md

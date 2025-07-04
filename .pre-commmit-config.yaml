@@ -1,0 +1,40 @@
+# This file defines the linters and formatters that run before each commit.
+repos:
+  # General hooks for all files
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1024'] # Fails if a file > 1MB is added
+
+  # Java & Kotlin Linter
+  - repo: https://github.com/detekt/detekt
+    rev: v1.23.6
+    hooks:
+      - id: detekt
+        args: [--config, backend/detekt-config.yml]
+        # To auto-generate a baseline config:
+        # ./gradlew detektBaseline -Pdetekt.baseline.path=backend/detekt-baseline.xml
+
+  # Python Formatter & Linter
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        language_version: python3.12
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+
+  # Frontend & Config File Formatter
+  - repo: https://github.com/prettier/prettier
+    rev: 3.2.5
+    hooks:
+      - id: prettier

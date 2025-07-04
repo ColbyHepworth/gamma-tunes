@@ -1,0 +1,107 @@
+name: Backend – Build, Test, Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:          # manual re-run button
+
+jobs:
+  # ────────────────────────────────────────────────────────────────
+  # 1) BUILD  &  PUSH  IMAGE
+  # ────────────────────────────────────────────────────────────────
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔐 Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐳 Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/backend:latest
+            ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+
+  # ────────────────────────────────────────────────────────────────
+  # 2) E2E  SMOKE  TEST  (compose stack)
+  # ────────────────────────────────────────────────────────────────
+  e2e-smoke:
+    name: E2E Smoke Tests
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Docker CLI + Compose v2
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Pull backend image
+        run: docker pull ghcr.io/${{ github.repository }}/backend:latest
+
+      - name: Start docker-compose stack
+        run: docker compose up -d
+        env:
+          SPRING_DATA_REDIS_PASSWORD: ""     # override if needed
+
+      - name: Wait for backend /health
+        run: |
+          for i in {1..20}; do
+            curl -fs http://localhost:8080/actuator/health && exit 0
+            sleep 3
+          done
+          echo "Backend never became healthy" && exit 1
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Run integrationTest task
+        run: ./gradlew --no-daemon integrationTest
+
+      - name: Shut down stack
+        if: always()
+        run: docker compose down -v
+
+  # ────────────────────────────────────────────────────────────────
+  # 3) DEPLOY  TO  STAGING  (SSH + Compose)
+  # ────────────────────────────────────────────────────────────────
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [ build-and-push, e2e-smoke ]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging        # optional approval gate
+
+    steps:
+      - name: 🚀 Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /opt/gamma-tunes
+            echo ${{ secrets.GHCR_TOKEN }} | \
+              docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose pull backend
+            docker compose up -d
+            docker image prune -f --filter "until=24h"

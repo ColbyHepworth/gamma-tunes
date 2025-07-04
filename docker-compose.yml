@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gammatunes_net
+
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4
+    volumes:
+      - ./audio-node/application.yml:/opt/lavalink/application.yml
+    ports:
+      - "2333:2333"
+    networks:
+      - gammatunes_net
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      pull: true
+      no_cache: true
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+    networks:
+      - gammatunes_net
+
+networks:
+  gammatunes_net:
+    driver: bridge
