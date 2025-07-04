@@ -87,24 +87,24 @@ jobs:
   # ────────────────────────────────────────────────────────────────
   # 3) DEPLOY  TO  STAGING  (SSH + Compose)
   # ────────────────────────────────────────────────────────────────
-  deploy-staging:
-    name: Deploy to Staging
-    needs: [ build-and-push, e2e-smoke ]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment: staging        # optional approval gate
-
-    steps:
-      - name: 🚀 Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.STAGING_HOST }}
-          username: ${{ secrets.STAGING_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          script: |
-            cd /opt/gamma-tunes
-            echo ${{ secrets.GHCR_TOKEN }} | \
-              docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker compose pull backend
-            docker compose up -d
-            docker image prune -f --filter "until=24h"
+#  deploy-staging:
+#    name: Deploy to Staging
+#    needs: [ build-and-push, e2e-smoke ]
+#    if: github.ref == 'refs/heads/main'
+#    runs-on: ubuntu-latest
+#    environment: staging        # optional approval gate
+#
+#    steps:
+#      - name: 🚀 Deploy via SSH
+#        uses: appleboy/ssh-action@v1.0.3
+#        with:
+#          host: ${{ secrets.STAGING_HOST }}
+#          username: ${{ secrets.STAGING_USER }}
+#          key: ${{ secrets.STAGING_SSH_KEY }}
+#          script: |
+#            cd /opt/gamma-tunes
+#            echo ${{ secrets.GHCR_TOKEN }} | \
+#              docker login ghcr.io -u ${{ github.actor }} --password-stdin
+#            docker compose pull backend
+#            docker compose up -d
+#            docker image prune -f --filter "until=24h"
