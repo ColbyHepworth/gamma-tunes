@@ -1,10 +1,6 @@
-# Normalize all text files to LF on commit / checkout
 * text=auto eol=lf
-!gradle/wrapper/gradle-wrapper.jar
-# Treat images & audio as binary
+gradle/wrapper/gradle-wrapper.jar -filter -diff -merge -text
 *.{png,jpg,jpeg,gif,svg,ico} binary
 *.{mp3,ogg,wav,flac}        binary
-# Prevent diffing ZIP-like archives or plugin JARs
 *.{jar,zip,tar.gz,tgz}      binary
 *.jar filter=lfs diff=lfs merge=lfs -text
-*.mp3 filter=lfs diff=lfs merge=lfs -text
