@@ -36,8 +36,8 @@ jobs:
           file: backend/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/backend:latest
-            ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+            ghcr.io/colbyhepworth/gamma-tunes/backend:latest
+            ghcr.io/colbyhepworth/gamma-tunes/backend:${{ github.sha }}
           cache-from: type=gha
           cache-to:   type=gha,mode=max
 
