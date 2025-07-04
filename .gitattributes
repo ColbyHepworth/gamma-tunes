@@ -1,5 +1,6 @@
 # Normalize all text files to LF on commit / checkout
 * text=auto eol=lf
+!gradle/wrapper/gradle-wrapper.jar
 # Treat images & audio as binary
 *.{png,jpg,jpeg,gif,svg,ico} binary
 *.{mp3,ogg,wav,flac}        binary
