@@ -14,7 +14,7 @@ services:
 
   backend:
     build:
-      context: .          # root of repo (contains build.gradle.kts, etc.)
+      context: .
       dockerfile: backend/Dockerfile
     depends_on:
       lavalink:           # 👉 wait for Lavalink socket to open
@@ -24,6 +24,17 @@ services:
       LAVALINK_HOST: lavalink
       LAVALINK_PORT: 2333
       LAVALINK_PASSWORD: ${LAVALINK_PASSWORD}
+    networks: [ gammatunes_net ]
+
+  bot:
+    build:
+      context: .
+      dockerfile: bot-jda/Dockerfile
+    depends_on:
+      - backend # The bot should wait for the backend to be available
+    environment:
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+      BACKEND_API_URL: "http://backend:8080"
     networks: [ gammatunes_net ]
 
 networks:
