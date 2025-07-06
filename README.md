@@ -1,7 +1,3 @@
-gamma-tunesReactive Spring Boot 🎵 Testcontainers ♦️ Docker ComposeOne command to verify the application code: ./gradlew verifyAll🖥️ PrerequisitesDocker Desktop (v20+) – Compose V2 enabled.Git & Git LFSNode.js LTS & Python 3.10+ (for developer tooling)(Optional) A local JDK 21. If not installed, the Gradle wrapper will auto-download one via the toolchain feature.🚀 First-time checkout & bootstrap# Clone the repo
-$ git clone https://github.com/colbyhepworth/gamma-tunes.git
-$ cd gamma-tunes
-
 # Install Git hooks, pre-commit linters, etc.
 $ ./scripts/bootstrap
 
