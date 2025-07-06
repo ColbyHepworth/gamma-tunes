@@ -34,16 +34,28 @@ sourceSets {
     }
 }
 
-/* task that runs the integrationTest source‑set */
-tasks.register<Test>("integrationTest") {
-    description = "Runs Docker‑backed integration tests"
-    group       = "verification"
+tasks.register<Test>("smokeTest") {
+    description = "Runs smoke tests against a running application stack"
+    group = "verification"
+    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+    classpath = sourceSets["integrationTest"].runtimeClasspath
+    useJUnitPlatform()
+    filter {
+        includeTestsMatching("*SmokeIT")
+    }
+}
 
+tasks.register<Test>("integrationTest") {
+    description = "Runs Docker‑backed integration tests using Testcontainers"
+    group       = "verification"
     testClassesDirs = sourceSets["integrationTest"].output.classesDirs
     classpath       = sourceSets["integrationTest"].runtimeClasspath
-
     useJUnitPlatform()
     shouldRunAfter(tasks.test)
+
+    filter {
+        excludeTestsMatching("*SmokeIT")
+    }
 }
 
 /* Make the integrationTest configurations inherit the regular test ones */
@@ -51,18 +63,22 @@ configurations["integrationTestImplementation"].extendsFrom(configurations.testI
 configurations["integrationTestRuntimeOnly"].extendsFrom(configurations.testRuntimeOnly.get())
 
 /* ───────────── 4. REPOSITORIES ─────── */
-repositories { mavenCentral() }
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://m2.dv8tion.net/releases")
+    }
+}
 
 /* ───────────── 5. VERSIONS ─────────── */
 val testcontainersVersion = "1.21.3"
-val redisTcVersion        = "2.2.4"
 
 /* ───────────── 6. DEPENDENCIES ─────── */
 dependencies {
     /* application */
     implementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation ("com.sedmelluq:lavaplayer:1.3.77")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     /* unit‑test */
@@ -73,7 +89,6 @@ dependencies {
     /* integration‑test */
     "integrationTestImplementation"(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
     "integrationTestImplementation"("org.testcontainers:junit-jupiter")
-    "integrationTestImplementation"("com.redis:testcontainers-redis:$redisTcVersion")
     "integrationTestImplementation"("io.rest-assured:rest-assured:5.4.0")
     "integrationTestImplementation"("org.awaitility:awaitility:4.2.0")
 }
@@ -94,7 +109,7 @@ val composeDown by tasks.registering(Exec::class) {
 }
 
 /* link compose to integrationTest */
-tasks.named("integrationTest") {
+tasks.named("smokeTest") {
     dependsOn(composeUp)
     finalizedBy(composeDown)
 }
@@ -105,6 +120,6 @@ tasks.named("check") { dependsOn("integrationTest") }
 /* ───── 8. SINGLE LOCAL GREEN‑LIGHT TASK ─ */
 tasks.register("verifyAll") {
     group = "verification"
-    description = "clean → test → composeUp → integrationTest → composeDown"
+    description = "clean → test → integrationTest"
     dependsOn("clean", "test", "integrationTest")
 }

@@ -1,43 +1,30 @@
 version: "3.8"
 
 services:
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - gammatunes_net
-
   lavalink:
-    image: ghcr.io/lavalink-devs/lavalink:4
+    image: ghcr.io/lavalink-devs/lavalink:4       # ✅ latest v4
+    container_name: lavalink
     volumes:
       - ./audio-node/application.yml:/opt/lavalink/application.yml
-    ports:
-      - "2333:2333"
-    networks:
-      - gammatunes_net
+    environment:
+      LAVALINK_SERVER_PASSWORD: ${LAVALINK_PASSWORD}
+      SERVER_PORT: 2333
+    ports: ["2333:2333"]
+    networks: [ gammatunes_net ]
 
   backend:
     build:
-      context: .
+      context: .          # root of repo (contains build.gradle.kts, etc.)
       dockerfile: backend/Dockerfile
-      pull: true
-      no_cache: true
     depends_on:
-      redis:
-        condition: service_healthy
-    ports:
-      - "8080:8080"
+      lavalink:           # 👉 wait for Lavalink socket to open
+        condition: service_started
+    ports: ["8080:8080"]
     environment:
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
-    networks:
-      - gammatunes_net
+      LAVALINK_HOST: lavalink
+      LAVALINK_PORT: 2333
+      LAVALINK_PASSWORD: ${LAVALINK_PASSWORD}
+    networks: [ gammatunes_net ]
 
 networks:
   gammatunes_net:

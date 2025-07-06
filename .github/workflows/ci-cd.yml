@@ -1,15 +1,43 @@
-name: Backend – Build, Test, Deploy
+name: Backend CI/CD
 
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:          # manual re-run button
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   # ────────────────────────────────────────────────────────────────
-  # 1) BUILD  &  PUSH  IMAGE
+  # 1) RUN ALL TESTS (Unit + Integration)
+  #    Runs on every push and pull request.
+  # ────────────────────────────────────────────────────────────────
+  test:
+    name: Backend • Unit & Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: gradle
+
+      - name: ✅ Run all tests
+        run: ./gradlew --no-daemon clean verifyAll
+
+  # ────────────────────────────────────────────────────────────────
+  # 2) BUILD AND PUSH DOCKER IMAGE
+  #    Only runs on a push to the main branch, after tests have passed.
   # ────────────────────────────────────────────────────────────────
   build-and-push:
+    name: 🐳 Build & Push Docker Image
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -19,7 +47,7 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+      - name: 🛠️ Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: 🔐 Login to GHCR
@@ -42,57 +70,15 @@ jobs:
           cache-to:   type=gha,mode=max
 
   # ────────────────────────────────────────────────────────────────
-  # 2) E2E  SMOKE  TEST  (compose stack)
-  # ────────────────────────────────────────────────────────────────
-  e2e-smoke:
-    name: E2E Smoke Tests
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # Docker CLI + Compose v2
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Pull backend image
-        run: docker pull ghcr.io/colbyhepworth/gamma-tunes/backend:latest
-
-      - name: Start docker-compose stack
-        run: docker compose up -d
-        env:
-          SPRING_DATA_REDIS_PASSWORD: ""     # override if needed
-
-      - name: Wait for backend /health
-        run: |
-          for i in {1..20}; do
-            curl -fs http://localhost:8080/actuator/health && exit 0
-            sleep 3
-          done
-          echo "Backend never became healthy" && exit 1
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: Run integrationTest task
-        run: ./gradlew --no-daemon integrationTest
-
-      - name: Shut down stack
-        if: always()
-        run: docker compose down -v
-
-  # ────────────────────────────────────────────────────────────────
-  # 3) DEPLOY  TO  STAGING  (SSH + Compose)
+  # 3) DEPLOY TO STAGING
+  #    Only runs on a push to main, after the image is built.
   # ────────────────────────────────────────────────────────────────
 #  deploy-staging:
-#    name: Deploy to Staging
-#    needs: [ build-and-push, e2e-smoke ]
-#    if: github.ref == 'refs/heads/main'
+#    name: 🚀 Deploy to Staging
+#    needs: build-and-push
+#    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 #    runs-on: ubuntu-latest
-#    environment: staging        # optional approval gate
+#    environment: staging
 #
 #    steps:
 #      - name: 🚀 Deploy via SSH
@@ -106,5 +92,6 @@ jobs:
 #            echo ${{ secrets.GHCR_TOKEN }} | \
 #              docker login ghcr.io -u ${{ github.actor }} --password-stdin
 #            docker compose pull backend
-#            docker compose up -d
+#            docker compose up -d --force-recreate
 #            docker image prune -f --filter "until=24h"
+

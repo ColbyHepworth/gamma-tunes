@@ -3,6 +3,7 @@ package com.gammatunes.backend;
 import io.restassured.RestAssured;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -10,6 +11,11 @@ import java.time.Duration;
 import static io.restassured.RestAssured.get;
 import static org.hamcrest.Matchers.equalTo;
 
+/**
+ * A simple "smoke test" to verify that the application starts and the health
+ * endpoint is available before running more complex integration tests.
+ */
+@Tag("integration")
 class SmokeIT {
 
     @BeforeAll
