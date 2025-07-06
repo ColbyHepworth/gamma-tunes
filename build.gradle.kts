@@ -155,6 +155,13 @@ project(":backend").tasks.named<Test>("smokeTest") {
 // Define the root verifyAll task that runs the main backend tests
 tasks.register("verifyAll") {
     group = "verification"
-    description = "clean → test → integrationTest"
-    dependsOn(tasks.named(":backend:clean"), tasks.named(":backend:test"), tasks.named(":backend:integrationTest"))
+    description = "Runs all checks and tests for all subprojects."
+    dependsOn(
+        ":backend:clean",
+        ":bot-jda:clean",
+        ":backend:test",
+        ":backend:integrationTest",
+        ":bot-jda:test",
+        // ":bot-jda:integrationTest"
+    )
 }
