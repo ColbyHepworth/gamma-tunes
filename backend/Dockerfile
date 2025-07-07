@@ -10,6 +10,7 @@ COPY gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.jar
 COPY gradle/wrapper/gradle-wrapper.properties gradle/wrapper/gradle-wrapper.properties
 COPY build.gradle.kts settings.gradle.kts gradle.properties ./
 COPY backend/src ./backend/src
+COPY common/src ./common/src
 
 RUN chmod +x gradlew
 RUN ./gradlew clean bootJar --no-daemon -x test

@@ -1,6 +1,7 @@
 package com.gammatunes.backend.audio.api;
 
 import com.gammatunes.backend.audio.exception.TrackLoadException;
+import com.gammatunes.common.model.Session;
 
 /**
  * The main entry point for interacting with the audio module.

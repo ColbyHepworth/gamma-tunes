@@ -1,4 +1,4 @@
-package com.gammatunes.backend.web.dto;
+package com.gammatunes.common.dto;
 
 /**
  * Represents a request to play a track based on a search query.

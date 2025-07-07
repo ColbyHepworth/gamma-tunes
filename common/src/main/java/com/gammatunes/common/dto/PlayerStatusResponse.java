@@ -1,8 +1,8 @@
-package com.gammatunes.backend.web.dto;
+package com.gammatunes.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.gammatunes.backend.audio.api.PlayerState;
-import com.gammatunes.backend.audio.api.Track;
+import com.gammatunes.common.model.PlayerState;
+import com.gammatunes.common.model.Track;
 
 import java.util.List;
 

@@ -1,9 +1,9 @@
 package com.gammatunes.backend.audio.lavalink;
 
 import com.gammatunes.backend.audio.api.AudioPlayer;
-import com.gammatunes.backend.audio.api.PlayerState;
-import com.gammatunes.backend.audio.api.Session;
-import com.gammatunes.backend.audio.api.Track;
+import com.gammatunes.common.model.PlayerState;
+import com.gammatunes.common.model.Session;
+import com.gammatunes.common.model.Track;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -11,7 +11,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;

@@ -2,11 +2,11 @@ package com.gammatunes.backend.web.controller;
 
 import com.gammatunes.backend.audio.api.AudioPlayer;
 import com.gammatunes.backend.audio.api.AudioService;
-import com.gammatunes.backend.audio.api.PlayerState;
-import com.gammatunes.backend.audio.api.Session;
-import com.gammatunes.backend.audio.api.Track;
 import com.gammatunes.backend.audio.exception.TrackLoadException;
-import com.gammatunes.backend.web.dto.PlayRequest;
+import com.gammatunes.common.dto.PlayRequest;
+import com.gammatunes.common.model.PlayerState;
+import com.gammatunes.common.model.Session;
+import com.gammatunes.common.model.Track;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

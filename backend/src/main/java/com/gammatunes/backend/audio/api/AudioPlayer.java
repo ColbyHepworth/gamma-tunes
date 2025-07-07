@@ -1,5 +1,9 @@
 package com.gammatunes.backend.audio.api;
 
+import com.gammatunes.common.model.PlayerState;
+import com.gammatunes.common.model.Session;
+import com.gammatunes.common.model.Track;
+
 import java.util.List;
 import java.util.Optional;
 

@@ -1,4 +1,4 @@
-package com.gammatunes.backend.audio.api;
+package com.gammatunes.common.model;
 
 /**
  * Represents the various states a player can be in.

@@ -1,4 +1,4 @@
-package com.gammatunes.backend.audio.api;
+package com.gammatunes.common.model;
 
 import java.time.Duration;
 

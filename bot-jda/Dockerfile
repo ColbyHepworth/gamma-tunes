@@ -5,6 +5,7 @@ WORKDIR /app
 # The Gradle build process will have already created the fat jar.
 # We just need to copy it into our image.
 COPY bot-jda/build/libs/*.jar app.jar
+COPY common/src ./common/src
 
 # The bot needs its token and the backend URL to function.
 # These will be passed in from docker-compose.yml.

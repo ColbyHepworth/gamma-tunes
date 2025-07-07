@@ -1,4 +1,4 @@
-package com.gammatunes.backend.web.dto;
+package com.gammatunes.common.dto;
 
 /**
  * Represents a response containing the status of an operation.

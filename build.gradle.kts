@@ -31,7 +31,17 @@ subprojects {
     }
 }
 
-/* ───────────── 3. BACKEND-SPECIFIC CONFIGURATION ───────────── */
+/* ───────────── 3. COMMON-SPECIFIC CONFIGURATION ───────────── */
+project(":common") {
+    // This is a plain Java library, so no special plugins are needed.
+    dependencies {
+        // This project might need annotations for JSON serialization in the future
+        implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.1")
+    }
+}
+
+
+/* ───────────── 4. BACKEND-SPECIFIC CONFIGURATION ───────────── */
 project(":backend") {
     apply(plugin = "org.springframework.boot")
 
@@ -82,6 +92,7 @@ project(":backend") {
         val testcontainersVersion = "1.19.8"
 
         // application
+        implementation(project(":common"))
         implementation("org.springframework.boot:spring-boot-starter-webflux")
         implementation("org.springframework.boot:spring-boot-starter-actuator")
         implementation("com.sedmelluq:lavaplayer:1.3.77")
@@ -100,7 +111,7 @@ project(":backend") {
     }
 }
 
-/* ───────────── 4. BOT-JDA-SPECIFIC CONFIGURATION ───────────── */
+/* ───────────── 5. BOT-JDA-SPECIFIC CONFIGURATION ───────────── */
 project(":bot-jda") {
     // This task configures the project to build a "fat jar" that includes all dependencies.
     tasks.jar {
@@ -123,6 +134,7 @@ project(":bot-jda") {
     }
 
     dependencies {
+        implementation(project(":common"))
         implementation("net.dv8tion:JDA:5.0.0-beta.24")
         implementation("com.squareup.okhttp3:okhttp:4.12.0") // For making HTTP calls to the backend
         implementation("com.google.code.gson:gson:2.10.1") // For handling JSON
@@ -132,7 +144,7 @@ project(":bot-jda") {
     }
 }
 
-/* ───────────── 5. ROOT-LEVEL HELPER TASKS ───────────── */
+/* ───────────── 6. ROOT-LEVEL HELPER TASKS ───────────── */
 tasks.register("composeUp", Exec::class) {
     group = "verification"
     description = "Build (if needed) & start the full stack via Docker Compose"

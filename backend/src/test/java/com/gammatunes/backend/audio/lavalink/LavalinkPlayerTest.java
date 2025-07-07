@@ -1,8 +1,8 @@
 package com.gammatunes.backend.audio.lavalink;
 
-import com.gammatunes.backend.audio.api.PlayerState;
-import com.gammatunes.backend.audio.api.Session;
-import com.gammatunes.backend.audio.api.Track;
+import com.gammatunes.common.model.PlayerState;
+import com.gammatunes.common.model.Session;
+import com.gammatunes.common.model.Track;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
