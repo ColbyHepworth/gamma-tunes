@@ -2,21 +2,21 @@ package com.gammatunes.backend.web.controller;
 
 import com.gammatunes.backend.audio.api.AudioService;
 import com.gammatunes.backend.audio.exception.TrackLoadException;
+import com.gammatunes.common.ApiRoutes;
 import com.gammatunes.common.dto.PlayRequest;
 import com.gammatunes.common.dto.PlayerStatusResponse;
 import com.gammatunes.common.dto.StatusResponse;
 import com.gammatunes.common.model.Session;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * A simple REST controller to expose our AudioService to the outside world.
  * This will be the entry point for our Discord bot or any other client.
  */
 @RestController
-@RequestMapping("/api/v1/music")
 public class MusicController {
 
     private final AudioService audioService;
@@ -33,7 +33,7 @@ public class MusicController {
      * @param request   The request body containing the query.
      * @return A response entity with a status message.
      */
-    @PostMapping("/{sessionId}/play")
+    @PostMapping(ApiRoutes.PLAY)
     public ResponseEntity<StatusResponse> play(
         @PathVariable String sessionId,
         @RequestBody PlayRequest request
@@ -48,7 +48,7 @@ public class MusicController {
         }
     }
 
-    @PostMapping("/{sessionId}/pause")
+    @PostMapping(ApiRoutes.PAUSE)
     public ResponseEntity<StatusResponse> pause(
         @PathVariable String sessionId
     ) {
@@ -59,7 +59,7 @@ public class MusicController {
         return ResponseEntity.ok(new StatusResponse("Player paused for session " + sessionId));
     }
 
-    @PostMapping("/{sessionId}/resume")
+    @PostMapping(ApiRoutes.RESUME)
     public ResponseEntity<StatusResponse> resume(
         @PathVariable String sessionId
     ) {
@@ -70,7 +70,7 @@ public class MusicController {
         return ResponseEntity.ok(new StatusResponse("Player resumed for session " + sessionId));
     }
 
-    @PostMapping("/{sessionId}/stop")
+    @PostMapping(ApiRoutes.STOP)
     public ResponseEntity<StatusResponse> stop(
         @PathVariable String sessionId
     ) {
@@ -81,7 +81,7 @@ public class MusicController {
         return ResponseEntity.ok(new StatusResponse("Player stopped for session " + sessionId));
     }
 
-    @PostMapping("/{sessionId}/skip")
+    @PostMapping(ApiRoutes.SKIP)
     public ResponseEntity<StatusResponse> skip(
         @PathVariable String sessionId
     ) {
@@ -92,7 +92,7 @@ public class MusicController {
         return ResponseEntity.ok(new StatusResponse("Player skipped for session " + sessionId));
     }
 
-    @GetMapping("/{sessionId}/status")
+    @GetMapping(ApiRoutes.STATUS)
     public ResponseEntity<PlayerStatusResponse> getStatus(@PathVariable String sessionId) {
         log.info("Received status request for session {}", sessionId);
         Session session = new Session(sessionId);

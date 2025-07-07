@@ -136,9 +136,16 @@ project(":bot-jda") {
     dependencies {
         implementation(project(":common"))
         implementation("net.dv8tion:JDA:5.0.0-beta.24")
-        implementation("com.squareup.okhttp3:okhttp:4.12.0") // For making HTTP calls to the backend
-        implementation("com.google.code.gson:gson:2.10.1") // For handling JSON
-        implementation("ch.qos.logback:logback-classic:1.5.6") // Logging
+        implementation("com.squareup.okhttp3:okhttp:4.12.0")
+        implementation("com.google.code.gson:gson:2.10.1")
+        implementation("ch.qos.logback:logback-classic:1.5.6")
+
+        // Unit Test Dependencies
+        testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+        testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+
+        // Integration Test Dependencies
         "integrationTestImplementation"("org.junit.jupiter:junit-jupiter-api:5.10.2")
         "integrationTestImplementation"("org.awaitility:awaitility:4.2.1")
     }
@@ -168,12 +175,6 @@ project(":backend").tasks.named<Test>("smokeTest") {
 tasks.register("verifyAll") {
     group = "verification"
     description = "Runs all checks and tests for all subprojects."
-    dependsOn(
-        ":backend:clean",
-        ":bot-jda:clean",
-        ":backend:test",
-        ":backend:integrationTest",
-        ":bot-jda:test",
-        // ":bot-jda:integrationTest"
-    )
+    dependsOn(subprojects.map { it.tasks.named("clean") })
+    dependsOn(subprojects.map { it.tasks.named("test") })
 }
