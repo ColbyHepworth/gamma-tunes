@@ -1,42 +1,45 @@
 package com.gammatunes.backend.audio.lavalink;
 
-import com.gammatunes.backend.audio.api.AudioPlayer;
-import com.gammatunes.common.model.PlayerState;
-import com.gammatunes.common.model.Session;
-import com.gammatunes.common.model.Track;
+import com.gammatunes.backend.common.model.PlayerState;
+import com.gammatunes.backend.common.model.Session;
+import com.gammatunes.backend.common.model.Track;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer; // Import the lavaplayer class
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
-import org.slf4j.Logger;
 
 
 /**
- * This is our "Adapter". It implements our application's AudioPlayer interface
- * and translates calls to the lavaplayer library's player object.
+ * A player implementation that uses the lavaplayer library to handle audio playback.
+ * This class manages the state of the player, the queue of tracks, and interacts with the lavaplayer API.
  */
-public class LavalinkPlayer implements AudioPlayer {
+public class LavalinkPlayer implements com.gammatunes.backend.audio.api.AudioPlayer {
 
     private static final Logger log = LoggerFactory.getLogger(LavalinkPlayer.class);
     private final Session session;
-    private final com.sedmelluq.discord.lavaplayer.player.AudioPlayer lavaplayer;
+    private final AudioPlayer lavaplayer;
     private final AudioPlayerManager playerManager;
-    private final ConcurrentLinkedQueue<Track> queue = new ConcurrentLinkedQueue<>();
     final AtomicReference<PlayerState> state = new AtomicReference<>(PlayerState.STOPPED);
     final AtomicReference<Track> currentlyPlaying = new AtomicReference<>(null);
+    private final ConcurrentLinkedQueue<Track> queue = new ConcurrentLinkedQueue<>();
 
-    public LavalinkPlayer(Session session, com.sedmelluq.discord.lavaplayer.player.AudioPlayer lavaplayer, AudioPlayerManager playerManager) {
+    public LavalinkPlayer(Session session, AudioPlayer lavaplayer, AudioPlayerManager playerManager) {
         this.session = session;
         this.lavaplayer = lavaplayer;
         this.playerManager = playerManager;
         this.lavaplayer.addListener(new LavalinkEventHandler(this));
+    }
+
+    public AudioPlayer getRealPlayer() {
+        return this.lavaplayer;
     }
 
     @Override
@@ -77,7 +80,7 @@ public class LavalinkPlayer implements AudioPlayer {
     public Optional<Track> skip() {
         log.info("Session {}: Skipping track", session.id());
         Track skippedTrack = currentlyPlaying.get();
-        lavaplayer.stopTrack();
+        playNextInQueue();
         return Optional.ofNullable(skippedTrack);
     }
 

@@ -4,8 +4,8 @@ import com.gammatunes.backend.audio.api.AudioPlayer;
 import com.gammatunes.backend.audio.api.AudioService;
 import com.gammatunes.backend.audio.exception.TrackLoadException;
 import com.gammatunes.backend.audio.source.AudioSourceManager;
-import com.gammatunes.common.model.Session;
-import com.gammatunes.common.model.Track;
+import com.gammatunes.backend.common.model.Session;
+import com.gammatunes.backend.common.model.Track;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 
 import org.slf4j.Logger;
@@ -49,4 +49,3 @@ public class LavalinkAudioService implements AudioService {
         player.enqueue(track);
     }
 }
-

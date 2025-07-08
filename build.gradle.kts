@@ -1,8 +1,9 @@
+// build.gradle.kts
 /* ───────────── 1. PLUGINS ───────────── */
 plugins {
     java
     id("org.springframework.boot") version "3.3.1" apply false
-    id("io.spring.dependency-management") version "1.1.7"
+    id("io.spring.dependency-management") version "1.1.7" apply false
 }
 
 /* ───────────── 2. SHARED CONFIGURATION FOR ALL SUB-PROJECTS ───────────── */
@@ -11,7 +12,7 @@ subprojects {
     apply(plugin = "io.spring.dependency-management")
 
     group = "com.gammatunes"
-    version = project.version
+    version = "0.0.1-SNAPSHOT"
 
     java {
         toolchain {
@@ -23,7 +24,7 @@ subprojects {
         mavenCentral()
         maven { url = uri("https://m2.dv8tion.net/releases") }
         maven { url = uri("https://jitpack.io") }
-        maven { url = uri("https://nexus.sedmelluq.net/content/groups/public/") }
+        maven { url = uri("https://maven.lavalink.dev/releases") }
     }
 
     tasks.withType<Test> {
@@ -31,131 +32,12 @@ subprojects {
     }
 }
 
-/* ───────────── 3. COMMON-SPECIFIC CONFIGURATION ───────────── */
-project(":common") {
-    // This is a plain Java library, so no special plugins are needed.
-    dependencies {
-        // This project might need annotations for JSON serialization in the future
-        implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.1")
-    }
-}
-
-
-/* ───────────── 4. BACKEND-SPECIFIC CONFIGURATION ───────────── */
-project(":backend") {
-    apply(plugin = "org.springframework.boot")
-
-    // Define the integrationTest source set
-    sourceSets {
-        create("integrationTest") {
-            compileClasspath += sourceSets.main.get().output
-            runtimeClasspath += sourceSets.main.get().output
-        }
-    }
-
-    // Configure dependencies for the new source set
-    configurations {
-        val integrationTestImplementation by getting { extendsFrom(configurations.testImplementation.get()) }
-        val integrationTestRuntimeOnly by getting { extendsFrom(configurations.testRuntimeOnly.get()) }
-    }
-
-    // Define the integrationTest task
-    val integrationTest by tasks.registering(Test::class) {
-        description = "Runs Docker‑backed integration tests using Testcontainers"
-        group = "verification"
-        testClassesDirs = sourceSets["integrationTest"].output.classesDirs
-        classpath = sourceSets["integrationTest"].runtimeClasspath
-        shouldRunAfter(tasks.test)
-        filter {
-            excludeTestsMatching("*SmokeIT")
-        }
-    }
-
-    // Define the smokeTest task
-    val smokeTest by tasks.registering(Test::class) {
-        description = "Runs smoke tests against a running application stack"
-        group = "verification"
-        testClassesDirs = sourceSets["integrationTest"].output.classesDirs
-        classpath = sourceSets["integrationTest"].runtimeClasspath
-        filter {
-            includeTestsMatching("*SmokeIT")
-        }
-    }
-
-    // Add integrationTest to the 'check' lifecycle task
-    tasks.check {
-        dependsOn(integrationTest)
-    }
-
-    // Dependencies for the backend
-    dependencies {
-        val testcontainersVersion = "1.19.8"
-
-        // application
-        implementation(project(":common"))
-        implementation("org.springframework.boot:spring-boot-starter-webflux")
-        implementation("org.springframework.boot:spring-boot-starter-actuator")
-        implementation("com.sedmelluq:lavaplayer:1.3.77")
-        add("developmentOnly", "org.springframework.boot:spring-boot-devtools")
-
-        // unit-test
-        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-        testImplementation("org.springframework.boot:spring-boot-starter-test")
-        testImplementation("io.projectreactor:reactor-test")
-
-        // integration-test
-        "integrationTestImplementation"(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
-        "integrationTestImplementation"("org.testcontainers:junit-jupiter")
-        "integrationTestImplementation"("io.rest-assured:rest-assured:5.4.0")
-        "integrationTestImplementation"("org.awaitility:awaitility:4.2.1")
-    }
-}
-
-/* ───────────── 5. BOT-JDA-SPECIFIC CONFIGURATION ───────────── */
-project(":bot-jda") {
-    // This task configures the project to build a "fat jar" that includes all dependencies.
-    tasks.jar {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        manifest.attributes["Main-Class"] = "com.gammatunes.bot.JdaBotApplication"
-        from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-    }
-
-    // Define and configure the integrationTest source set for this subproject
-    sourceSets {
-        create("integrationTest") {
-            compileClasspath += sourceSets.main.get().output
-            runtimeClasspath += sourceSets.main.get().output
-        }
-    }
-
-    configurations {
-        val integrationTestImplementation by getting { extendsFrom(configurations.testImplementation.get()) }
-        val integrationTestRuntimeOnly by getting { extendsFrom(configurations.testRuntimeOnly.get()) }
-    }
-
-    dependencies {
-        implementation(project(":common"))
-        implementation("net.dv8tion:JDA:5.0.0-beta.24")
-        implementation("com.squareup.okhttp3:okhttp:4.12.0")
-        implementation("com.google.code.gson:gson:2.10.1")
-        implementation("ch.qos.logback:logback-classic:1.5.6")
-
-        // Unit Test Dependencies
-        testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
-        testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-
-        // Integration Test Dependencies
-        "integrationTestImplementation"("org.junit.jupiter:junit-jupiter-api:5.10.2")
-        "integrationTestImplementation"("org.awaitility:awaitility:4.2.1")
-    }
-}
-
-/* ───────────── 6. ROOT-LEVEL HELPER TASKS ───────────── */
+/* ───────────── 3. ROOT-LEVEL HELPER TASKS ───────────── */
 tasks.register("composeUp", Exec::class) {
     group = "verification"
     description = "Build (if needed) & start the full stack via Docker Compose"
-    dependsOn(":backend:bootJar", ":bot-jda:jar")
+    // Depends on the bootJar task from the 'backend' subproject
+    dependsOn(":backend:bootJar")
     commandLine("docker", "compose", "up", "--build", "-d")
 }
 
@@ -165,16 +47,9 @@ tasks.register("composeDown", Exec::class) {
     commandLine("docker", "compose", "down", "-v")
 }
 
-// Link compose tasks to the backend's smokeTest task
-project(":backend").tasks.named<Test>("smokeTest") {
-    dependsOn(rootProject.tasks.named("composeUp"))
-    finalizedBy(rootProject.tasks.named("composeDown"))
-}
-
-// Define the root verifyAll task that runs the main backend tests
+// Define the root verifyAll task that runs all tests
 tasks.register("verifyAll") {
     group = "verification"
-    description = "Runs all checks and tests for all subprojects."
-    dependsOn(subprojects.map { it.tasks.named("clean") })
-    dependsOn(subprojects.map { it.tasks.named("test") })
+    description = "Runs all checks and tests for the project."
+    dependsOn("clean", "check")
 }

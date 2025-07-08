@@ -1,7 +1,7 @@
 package com.gammatunes.backend.audio.source;
 
 import com.gammatunes.backend.audio.exception.TrackLoadException;
-import com.gammatunes.common.model.Track;
+import com.gammatunes.backend.common.model.Track;
 
 /**
  * Defines the contract for a source that can resolve a query into a playable Track.

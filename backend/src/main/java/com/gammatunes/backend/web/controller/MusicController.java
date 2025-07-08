@@ -2,11 +2,11 @@ package com.gammatunes.backend.web.controller;
 
 import com.gammatunes.backend.audio.api.AudioService;
 import com.gammatunes.backend.audio.exception.TrackLoadException;
-import com.gammatunes.common.ApiRoutes;
-import com.gammatunes.common.dto.PlayRequest;
-import com.gammatunes.common.dto.PlayerStatusResponse;
-import com.gammatunes.common.dto.StatusResponse;
-import com.gammatunes.common.model.Session;
+import com.gammatunes.backend.common.ApiRoutes;
+import com.gammatunes.backend.common.dto.PlayRequest;
+import com.gammatunes.backend.common.dto.PlayerStatusResponse;
+import com.gammatunes.backend.common.dto.StatusResponse;
+import com.gammatunes.backend.common.model.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;

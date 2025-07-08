@@ -57,7 +57,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🐳 Build & Push
+      - name: 🐳 Build & Push Backend Image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -91,7 +91,7 @@ jobs:
 #            cd /opt/gamma-tunes
 #            echo ${{ secrets.GHCR_TOKEN }} | \
 #              docker login ghcr.io -u ${{ github.actor }} --password-stdin
+#            # The compose file is now simpler
 #            docker compose pull backend
 #            docker compose up -d --force-recreate
 #            docker image prune -f --filter "until=24h"
-

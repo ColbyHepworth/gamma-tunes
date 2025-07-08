@@ -2,7 +2,7 @@ package com.gammatunes.backend.audio.source;
 
 import com.gammatunes.backend.audio.exception.TrackLoadException;
 import com.gammatunes.backend.audio.exception.UnresolvableTrackException;
-import com.gammatunes.common.model.Track;
+import com.gammatunes.backend.common.model.Track;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
