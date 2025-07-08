@@ -74,7 +74,7 @@ dependencies {
     implementation("io.github.cdimascio:dotenv-java:2.3.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation("ch.qos.logback:logback-classic:1.5.6")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
 
     // unit-test
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
