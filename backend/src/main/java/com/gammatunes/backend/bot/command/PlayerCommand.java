@@ -2,14 +2,11 @@ package com.gammatunes.backend.bot.command;
 
 import com.gammatunes.backend.audio.api.AudioPlayer;
 import com.gammatunes.backend.audio.api.AudioService;
-import com.gammatunes.backend.bot.command.impl.player.ResumeCommand;
 import com.gammatunes.backend.bot.util.CommandUtil;
-import com.gammatunes.backend.common.model.Session;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
 
 /**
  * Abstract base class for commands that interact with the audio player.
@@ -20,26 +17,39 @@ public abstract class PlayerCommand implements Command {
     protected final AudioService audioService;
     private static final Logger log = LoggerFactory.getLogger(PlayerCommand.class);
 
-
     public PlayerCommand(AudioService audioService) {
         this.audioService = audioService;
     }
 
+    /**
+     * Runs the common checks and executes the player command.
+     * This method is called when the command is invoked.
+     * @param event The event containing the command interaction details.
+     */
     @Override
     public final void execute(SlashCommandInteractionEvent event) {
         if (!CommandUtil.preliminaryChecks(event)) {
             return;
         }
 
-        String guildId = Objects.requireNonNull(event.getGuild()).getId();
-        AudioPlayer player = audioService.getOrCreatePlayer(new Session(guildId));
+        AudioPlayer player = CommandUtil.getPlayer(audioService, event);
 
         log.info("Executing command '{}' for user {}", event.getName(), event.getUser().getName());
         executePlayerCommand(player);
         event.getHook().sendMessage(getSuccessMessage()).queue();
     }
 
+    /**
+     * Returns the command data for this player command.
+     * Subclasses should implement this method to provide specific command details.
+     * @param player The audio player instance associated with the command.
+     */
     protected abstract void executePlayerCommand(AudioPlayer player);
 
+    /**
+     * Returns the success message to be sent after executing the command.
+     * Subclasses should implement this method to provide a specific success message.
+     * @return The success message as a String.
+     */
     protected abstract String getSuccessMessage();
 }

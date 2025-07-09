@@ -1,8 +1,13 @@
 package com.gammatunes.backend.bot.util;
 
+import com.gammatunes.backend.audio.api.AudioPlayer;
+import com.gammatunes.backend.audio.api.AudioService;
+import com.gammatunes.backend.common.model.Session;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+
+import java.util.Objects;
 
 /**
  * A utility class for common command-related checks and actions.
@@ -33,7 +38,17 @@ public final class CommandUtil {
             event.getHook().sendMessage("❌ You must be in a voice channel to use this command.").queue();
             return false;
         }
-
         return true;
+    }
+
+    /**
+     * A helper method to get the AudioPlayer for the current guild.
+     * @param audioService The audio service to use.
+     * @param event The command event.
+     * @return The AudioPlayer for the guild.
+     */
+    public static AudioPlayer getPlayer(AudioService audioService, SlashCommandInteractionEvent event) {
+        String guildId = Objects.requireNonNull(event.getGuild()).getId();
+        return audioService.getOrCreatePlayer(new Session(guildId));
     }
 }

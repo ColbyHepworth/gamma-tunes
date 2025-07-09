@@ -7,7 +7,6 @@ import com.gammatunes.backend.audio.source.AudioSourceManager;
 import com.gammatunes.backend.common.model.Session;
 import com.gammatunes.backend.common.model.Track;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

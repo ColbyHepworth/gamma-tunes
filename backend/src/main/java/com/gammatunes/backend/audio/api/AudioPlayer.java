@@ -21,6 +21,14 @@ public interface AudioPlayer {
      */
     void enqueue(Track track);
 
+
+    /**
+     * Clears the entire queue of tracks.
+     * <p>
+     * This does not stop the currently playing track; it only clears the queue.
+     */
+    void clearQueue();
+
     /**
      * Pauses the currently playing track.
      */
@@ -42,6 +50,13 @@ public interface AudioPlayer {
      * @return The track that was skipped, or an empty Optional if nothing was playing.
      */
     Optional<Track> skip();
+
+    /**
+     * Goes back to the previous track in the queue, if available.
+     *
+     * @return The track that was played before the current one, or an empty Optional if there is no previous track.
+     */
+    Optional<Track> previous();
 
     /**
      * Retrieves an immutable list of the tracks currently in the queue.

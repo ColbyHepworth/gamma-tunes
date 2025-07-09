@@ -1,4 +1,4 @@
-package com.gammatunes.backend.bot;
+package com.gammatunes.backend;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

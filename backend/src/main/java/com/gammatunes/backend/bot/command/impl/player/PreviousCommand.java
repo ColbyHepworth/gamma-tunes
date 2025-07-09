@@ -12,16 +12,14 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-/**
- * Command to skip the currently playing track in the voice channel.
- * This command interacts with the audio service to skip playback.
- */
+
 @Component
-public class SkipCommand implements Command {
+public class PreviousCommand implements Command {
 
     private final AudioService audioService;
 
-    public SkipCommand(AudioService audioService) {
+
+    public PreviousCommand(AudioService audioService) {
         this.audioService = audioService;
     }
 
@@ -32,18 +30,17 @@ public class SkipCommand implements Command {
         }
 
         AudioPlayer player = CommandUtil.getPlayer(audioService, event);
-        Optional<Track> skippedTrack = player.skip();
+        Optional<Track> skippedTrack = player.previous();
 
         if (skippedTrack.isPresent()) {
-            event.getHook().sendMessage("⏭️ Skipped: `" + skippedTrack.get().title() + "`").queue();
+            event.getHook().sendMessage("⏮️ Skipped to previous track: " + skippedTrack.get().title()).queue();
         } else {
-            event.getHook().sendMessage("❌ Nothing to skip! The queue is empty.").queue();
+            event.getHook().sendMessage("❌ No previous track available.").queue();
         }
     }
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("skip", "Skips the current track.");
+        return Commands.slash("previous", "Moves to the previous track in the queue.");
     }
-
 }
