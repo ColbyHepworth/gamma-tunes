@@ -1,9 +1,8 @@
 # 🎵 Gamma Tunes - A Modern, Scalable Discord Music Bot
 
-[![CI/CD](https://github.com/colbyhepworth/gamma-tunes/actions/workflows/ci.yml/badge.svg)](https://github.com/colbyhepworth/gamma-tunes/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-21-ED8B00.svg?logo=java&logoColor=white)](https://openjdk.org/projects/jdk/21/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0-6DB33F.svg?logo=spring&logoColor=white)](https://spring.io/projects/spring-boot)
 
 **Gamma Tunes** is a high-performance Discord music bot built on a modern, decoupled Java backend. This project serves as a comprehensive demonstration of enterprise-level software architecture principles, including SOLID design, a robust multi-layered testing strategy, and a fully automated CI/CD pipeline using Docker and GitHub Actions.
 
