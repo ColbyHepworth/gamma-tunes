@@ -37,6 +37,19 @@ project(":backend") {
     apply(plugin = "org.springframework.boot")
     apply(plugin = "io.spring.dependency-management")
 
+    sourceSets {
+        create("integrationTest") {
+            compileClasspath += sourceSets.main.get().output
+            runtimeClasspath += sourceSets.main.get().output
+        }
+    }
+
+    val integrationTestImplementation by configurations.getting {
+        extendsFrom(configurations.testImplementation.get())
+    }
+
+    configurations["integrationTestRuntimeOnly"].extendsFrom(configurations.runtimeOnly.get())
+
     val integrationTest by tasks.registering(Test::class) {
         description = "Runs component integration tests using Testcontainers"
         group = "verification"
@@ -58,6 +71,11 @@ project(":backend") {
         filter {
             includeTestsMatching("*E2E*")
         }
+    }
+
+    tasks.named("check") {
+        dependsOn(integrationTest)
+        dependsOn(e2eTest)
     }
 }
 
