@@ -32,7 +32,36 @@ subprojects {
     }
 }
 
-/* ───────────── 3. ROOT-LEVEL HELPER TASKS ───────────── */
+/* ───────────── 3. BACKEND-SPECIFIC CONFIGURATION ───────────── */
+project(":backend") {
+    apply(plugin = "org.springframework.boot")
+    apply(plugin = "io.spring.dependency-management")
+
+    val integrationTest by tasks.registering(Test::class) {
+        description = "Runs component integration tests using Testcontainers"
+        group = "verification"
+        testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+        classpath = sourceSets["integrationTest"].runtimeClasspath
+        shouldRunAfter(tasks.named("test"))
+        filter {
+            excludeTestsMatching("*E2E*")
+            excludeTestsMatching("*SmokeIT")
+        }
+    }
+
+    val e2eTest by tasks.registering(Test::class) {
+        description = "Runs slow E2E tests against the full stack via Testcontainers"
+        group = "verification"
+        testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+        classpath = sourceSets["integrationTest"].runtimeClasspath
+        shouldRunAfter(tasks.named("integrationTest"))
+        filter {
+            includeTestsMatching("*E2E*")
+        }
+    }
+}
+
+/* ───────────── 4. ROOT-LEVEL HELPER TASKS ───────────── */
 tasks.register("composeUp", Exec::class) {
     group = "verification"
     description = "Build (if needed) & start the full stack via Docker Compose"
