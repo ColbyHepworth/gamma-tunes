@@ -1,3 +1,4 @@
+# File: .github/workflows/ci-cd.yml
 name: Backend CI/CD
 
 on:
@@ -52,7 +53,7 @@ jobs:
           cache: gradle
 
       - name: ✅ Run end-to-end tests
-        run: ./gradlew --no-daemon e2eTest
+        run: ./gradlew --no-daemon :backend:e2eTest
 
   # ────────────────────────────────────────────────────────────────
   # 3) BUILD AND PUSH DOCKER IMAGE
