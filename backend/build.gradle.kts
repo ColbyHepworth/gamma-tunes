@@ -1,95 +1,100 @@
-// backend/build.gradle.kts
+/* ───────────── 1. PLUGINS ─────────────
+   • Give each plugin its version here so the Spring-Boot BOM is applied.
+   • The IDEA plugin lets IntelliJ mark the custom source-set.                */
 plugins {
-    id("org.springframework.boot")
+    id("org.springframework.boot")            version "3.3.1"
+    id("io.spring.dependency-management")     version "1.1.7"
+    idea
 }
 
-/* ───────────── 1. BACKEND-SPECIFIC CONFIGURATION ───────────── */
-// This task configures the project to build a "fat jar" that includes all dependencies.
+/* ───────────── 2. BOOT-JAR CONFIGURATION ─────────────
+   Produces backend-app.jar with the right entry-point class.                  */
 tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
     archiveFileName.set("backend-app.jar")
     mainClass.set("com.gammatunes.backend.BackendApplication")
 }
 
-// Define the integrationTest source set
+/* ───────────── 3. SOURCE-SETS ─────────────
+   Adds an “integrationTest” source-set that re-uses the main classpath.      */
 sourceSets {
-    create("integrationTest") {
-        compileClasspath += sourceSets.main.get().output
-        runtimeClasspath += sourceSets.main.get().output
+    val main by getting
+    val integrationTest by creating {
+        compileClasspath += main.output
+        runtimeClasspath  += main.output
     }
 }
 
-// Configure dependencies for the new source set
+/* ───────────── 4. CONFIGURATION INHERITANCE ─────────────   */
 configurations {
-    val integrationTestImplementation by getting { extendsFrom(configurations.testImplementation.get()) }
-    val integrationTestRuntimeOnly by getting { extendsFrom(configurations.testRuntimeOnly.get()) }
+    named("integrationTestImplementation") { extendsFrom(getByName("testImplementation")) }
+    named("integrationTestRuntimeOnly")     { extendsFrom(getByName("testRuntimeOnly")) }
 }
 
-// Define the integrationTest task
+/* ───────────── 5. TEST TASKS ─────────────
+   • integrationTest – fast component tests
+   • e2eTest        – slow full-stack tests
+   • smokeTest      – hits running stack via Docker Compose                   */
+
 val integrationTest by tasks.registering(Test::class) {
-    description = "Runs Docker‑backed integration tests using Testcontainers"
-    group = "verification"
-    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
-    classpath = sourceSets["integrationTest"].runtimeClasspath
-    shouldRunAfter(tasks.test)
+    description      = "Runs component integration tests using Testcontainers"
+    group            = "verification"
+    testClassesDirs  = sourceSets["integrationTest"].output.classesDirs
+    classpath        = sourceSets["integrationTest"].runtimeClasspath
+    shouldRunAfter(tasks.named("test"))
     filter {
         excludeTestsMatching("*SmokeIT")
+        excludeTestsMatching("*E2E*")
     }
 }
 
-// Define the smokeTest task
+val e2eTest by tasks.registering(Test::class) {
+    description      = "Runs slow E2E tests against the full stack via Testcontainers"
+    group            = "verification"
+    testClassesDirs  = sourceSets["integrationTest"].output.classesDirs
+    classpath        = sourceSets["integrationTest"].runtimeClasspath
+    shouldRunAfter(integrationTest)
+    filter { includeTestsMatching("*E2E*") }
+}
+
+// 6-c) Smoke Tests (require running stack)
 val smokeTest by tasks.registering(Test::class) {
-    description = "Runs smoke tests against a running application stack"
-    group = "verification"
-    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
-    classpath = sourceSets["integrationTest"].runtimeClasspath
-    filter {
-        includeTestsMatching("*SmokeIT")
-    }
-    // Link to tasks in the root project
+    description      = "Runs smoke tests against a running application stack"
+    group            = "verification"
+    testClassesDirs  = sourceSets["integrationTest"].output.classesDirs
+    classpath        = sourceSets["integrationTest"].runtimeClasspath
+    filter { includeTestsMatching("*SmokeIT") }
     dependsOn(rootProject.tasks.named("composeUp"))
     finalizedBy(rootProject.tasks.named("composeDown"))
 }
 
-// Add integrationTest to the 'check' lifecycle task
-tasks.check {
-    dependsOn(integrationTest)
-}
+/* ───────────── 6. LIFECYCLE HOOK ─────────────
+   ‘check’ now = unit + component integrations.                               */
+tasks.named("check") { dependsOn(integrationTest) }
 
-/* ───────────── 2. DEPENDENCIES ───────────── */
+/* ───────────── 7. DEPENDENCIES ─────────────                                 */
 dependencies {
-    val testcontainersVersion = "1.19.8"
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.3.1"))
 
-    // application
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("dev.arbjerg:lavaplayer:2.2.4")
-    implementation("dev.lavalink.youtube:v2:1.13.3")
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-
-    // common dependencies
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.1")
-
-    // bot dependencies
     implementation("net.dv8tion:JDA:5.0.0-beta.24")
-    implementation("io.github.cdimascio:dotenv-java:2.3.2")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.google.code.gson:gson:2.10.1")
-    implementation("ch.qos.logback:logback-classic:1.5.6")
 
-    // unit-test
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation("dev.lavalink.youtube:v2:1.13.3")
+
+    implementation("io.github.cdimascio:java-dotenv:5.2.2")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.1")
+    implementation("com.google.code.gson:gson:2.10.1")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testImplementation("org.mockito:mockito-core:5.12.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.12.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    // integration-test
-    "integrationTestImplementation"(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
+    val tcVersion = "1.19.8"
+    "integrationTestImplementation"(platform("org.testcontainers:testcontainers-bom:$tcVersion"))
     "integrationTestImplementation"("org.testcontainers:junit-jupiter")
     "integrationTestImplementation"("io.rest-assured:rest-assured:5.4.0")
     "integrationTestImplementation"("org.awaitility:awaitility:4.2.1")
 }
-

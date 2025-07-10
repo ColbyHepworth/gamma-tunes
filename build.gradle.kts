@@ -1,15 +1,16 @@
-// build.gradle.kts
+
 /* ───────────── 1. PLUGINS ───────────── */
 plugins {
     java
     id("org.springframework.boot") version "3.3.1" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
+    idea // The IDEA plugin to help the IDE recognize source sets
 }
 
 /* ───────────── 2. SHARED CONFIGURATION FOR ALL SUB-PROJECTS ───────────── */
 subprojects {
     apply(plugin = "java")
-    apply(plugin = "io.spring.dependency-management")
+    // The 'idea' plugin is now applied in the specific subproject build file
 
     group = "com.gammatunes"
     version = "0.0.1-SNAPSHOT"
@@ -32,58 +33,10 @@ subprojects {
     }
 }
 
-/* ───────────── 3. BACKEND-SPECIFIC CONFIGURATION ───────────── */
-project(":backend") {
-    apply(plugin = "org.springframework.boot")
-    apply(plugin = "io.spring.dependency-management")
-
-    sourceSets {
-        create("integrationTest") {
-            compileClasspath += sourceSets.main.get().output
-            runtimeClasspath += sourceSets.main.get().output
-        }
-    }
-
-    val integrationTestImplementation by configurations.getting {
-        extendsFrom(configurations.testImplementation.get())
-    }
-
-    configurations["integrationTestRuntimeOnly"].extendsFrom(configurations.runtimeOnly.get())
-
-    val integrationTest by tasks.registering(Test::class) {
-        description = "Runs component integration tests using Testcontainers"
-        group = "verification"
-        testClassesDirs = sourceSets["integrationTest"].output.classesDirs
-        classpath = sourceSets["integrationTest"].runtimeClasspath
-        shouldRunAfter(tasks.named("test"))
-        filter {
-            excludeTestsMatching("*E2E*")
-            excludeTestsMatching("*SmokeIT")
-        }
-    }
-
-    val e2eTest by tasks.registering(Test::class) {
-        description = "Runs slow E2E tests against the full stack via Testcontainers"
-        group = "verification"
-        testClassesDirs = sourceSets["integrationTest"].output.classesDirs
-        classpath = sourceSets["integrationTest"].runtimeClasspath
-        shouldRunAfter(tasks.named("integrationTest"))
-        filter {
-            includeTestsMatching("*E2E*")
-        }
-    }
-
-    tasks.named("check") {
-        dependsOn(integrationTest)
-        dependsOn(e2eTest)
-    }
-}
-
-/* ───────────── 4. ROOT-LEVEL HELPER TASKS ───────────── */
+/* ───────────── 3. ROOT-LEVEL HELPER TASKS ───────────── */
 tasks.register("composeUp", Exec::class) {
     group = "verification"
     description = "Build (if needed) & start the full stack via Docker Compose"
-    // Depends on the bootJar task from the 'backend' subproject
     dependsOn(":backend:bootJar")
     commandLine("docker", "compose", "up", "--build", "-d")
 }
@@ -98,5 +51,5 @@ tasks.register("composeDown", Exec::class) {
 tasks.register("verifyAll") {
     group = "verification"
     description = "Runs all checks and tests for the project."
-    dependsOn("clean", "check")
+    dependsOn(":backend:clean", ":backend:check")
 }
