@@ -1,6 +1,8 @@
 package com.gammatunes.backend.audio.player;
 
 import com.gammatunes.backend.common.model.Track;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +15,8 @@ import java.util.Optional;
  */
 public class TrackScheduler {
 
+    private static final Logger logger = LoggerFactory.getLogger(TrackScheduler.class);
+
     private final List<Track> tracks = new ArrayList<>();
     private int currentIndex = -1;
 
@@ -21,10 +25,12 @@ public class TrackScheduler {
      * @param track The track to add.
      */
     public void enqueue(Track track) {
+        logger.debug("Enqueuing track: {}", track);
         tracks.add(track);
     }
 
     public void addNext(Track track) {
+        logger.debug("Adding track to the front of the queue: {}", track);
         tracks.add(currentIndex + 1, track);
     }
 
@@ -34,10 +40,12 @@ public class TrackScheduler {
      */
     public Optional<Track> next() {
         if (currentIndex + 1 < tracks.size()) {
+            logger.debug("Next track: {}", tracks.get(currentIndex + 1));
             currentIndex++;
             return Optional.of(tracks.get(currentIndex));
         }
         // We've reached the end of the queue.
+        logger.debug("Reached the end of the track list, cannot go to next track.");
         currentIndex = tracks.size() - 1; // Keep index at the end
         return Optional.empty();
     }
@@ -48,10 +56,12 @@ public class TrackScheduler {
      */
     public Optional<Track> previous() {
         if (currentIndex - 1 >= 0) {
+            logger.debug("Previous track: {}", tracks.get(currentIndex - 1));
             currentIndex--;
             return Optional.of(tracks.get(currentIndex));
         }
         // We are at the beginning, can't go back further.
+        logger.debug("At the beginning of the track list, cannot go to previous track.");
         return Optional.empty();
     }
 
@@ -61,8 +71,10 @@ public class TrackScheduler {
      */
     public Optional<Track> getCurrentTrack() {
         if (currentIndex >= 0 && currentIndex < tracks.size()) {
+            logger.debug("Current track: {}", tracks.get(currentIndex));
             return Optional.of(tracks.get(currentIndex));
         }
+        logger.debug("No current track, index is out of bounds: {}", currentIndex);
         return Optional.empty();
     }
 
@@ -72,8 +84,10 @@ public class TrackScheduler {
      */
     public List<Track> getQueue() {
         if (currentIndex + 1 >= tracks.size()) {
+            logger.debug("No upcoming tracks, current index: {}, total tracks: {}", currentIndex, tracks.size());
             return Collections.emptyList();
         }
+        logger.debug("Upcoming tracks from index {}: {}", currentIndex + 1, tracks.subList(currentIndex + 1, tracks.size()));
         return Collections.unmodifiableList(tracks.subList(currentIndex + 1, tracks.size()));
     }
 
@@ -82,7 +96,10 @@ public class TrackScheduler {
      */
     public void clearQueue() {
         if (currentIndex + 1 < tracks.size()) {
+            logger.debug("Clearing upcoming tracks from index {}", currentIndex + 1);
             tracks.subList(currentIndex + 1, tracks.size()).clear();
+        } else {
+            logger.debug("No upcoming tracks to clear, current index: {}", currentIndex);
         }
     }
 
@@ -90,6 +107,7 @@ public class TrackScheduler {
      * Clears the entire track list and history.
      */
     public void clearAll() {
+    logger.debug("Clearing all tracks and resetting current index.");
         tracks.clear();
         currentIndex = -1;
     }

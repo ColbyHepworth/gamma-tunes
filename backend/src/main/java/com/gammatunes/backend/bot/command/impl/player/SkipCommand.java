@@ -35,9 +35,9 @@ public class SkipCommand implements Command {
         Optional<Track> skippedTrack = player.skip();
 
         if (skippedTrack.isPresent()) {
-            event.getHook().sendMessage("⏭️ Skipped: `" + skippedTrack.get().title() + "`").queue();
+            event.getHook().sendMessage("⏭️ Skipped to: `" + skippedTrack.get().title() + "`").queue();
         } else {
-            event.getHook().sendMessage("❌ Nothing to skip! The queue is empty.").queue();
+            event.getHook().sendMessage("❌ Nothing to skip to! The queue is empty.").queue();
         }
     }
 

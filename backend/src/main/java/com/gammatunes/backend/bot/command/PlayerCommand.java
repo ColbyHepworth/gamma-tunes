@@ -4,9 +4,6 @@ import com.gammatunes.backend.audio.api.AudioPlayer;
 import com.gammatunes.backend.audio.api.AudioService;
 import com.gammatunes.backend.bot.util.CommandUtil;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 /**
  * Abstract base class for commands that interact with the audio player.
@@ -15,7 +12,6 @@ import org.slf4j.LoggerFactory;
 public abstract class PlayerCommand implements Command {
 
     protected final AudioService audioService;
-    private static final Logger log = LoggerFactory.getLogger(PlayerCommand.class);
 
     public PlayerCommand(AudioService audioService) {
         this.audioService = audioService;
@@ -31,10 +27,9 @@ public abstract class PlayerCommand implements Command {
         if (!CommandUtil.preliminaryChecks(event)) {
             return;
         }
-
+        CommandUtil.connectToChannel(audioService, event);
         AudioPlayer player = CommandUtil.getPlayer(audioService, event);
 
-        log.info("Executing command '{}' for user {}", event.getName(), event.getUser().getName());
         executePlayerCommand(player);
         event.getHook().sendMessage(getSuccessMessage()).queue();
     }

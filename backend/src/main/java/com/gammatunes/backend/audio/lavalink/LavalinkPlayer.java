@@ -19,116 +19,135 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class LavalinkPlayer implements com.gammatunes.backend.audio.api.AudioPlayer {
 
-    private static final Logger log = LoggerFactory.getLogger(LavalinkPlayer.class);
+    private static final Logger logger = LoggerFactory.getLogger(LavalinkPlayer.class);
     private final Session session;
-    private final AudioPlayer lavaplayer;
+    private final AudioPlayer lavaPlayer;
     private final AudioPlayerManager playerManager;
     private final TrackScheduler scheduler = new TrackScheduler();
     final AtomicReference<PlayerState> state = new AtomicReference<>(PlayerState.STOPPED);
 
     public LavalinkPlayer(Session session, AudioPlayer lavaplayer, AudioPlayerManager playerManager) {
         this.session = session;
-        this.lavaplayer = lavaplayer;
+        this.lavaPlayer = lavaplayer;
         this.playerManager = playerManager;
-        this.lavaplayer.addListener(new LavalinkEventHandler(this));
+        this.lavaPlayer.addListener(new LavalinkEventHandler(this));
     }
 
     public AudioPlayer getRealPlayer() {
-        return this.lavaplayer;
+        return this.lavaPlayer;
     }
 
     @Override
     public void play(Track track) {
-        log.debug("Session {}: Enqueuing track '{}'", session.id(), track.title());
         scheduler.enqueue(track);
-        if (state.get() == PlayerState.STOPPED) {
-            skip(); // Start playing if stopped
+        if (state.get() != PlayerState.PLAYING) {
+            logger.info("Session {}: Playing track: {}", session.id(), track.title());
+            skip();
+        } else {
+            logger.info("Session {}: Player is already playing, track added to queue: {}", session.id(), track.title());
         }
     }
 
     @Override
     public void playNow(Track track) {
-        log.debug("Session {}: Pushing track '{}'", session.id(), track.title());
+        logger.info("Session {}: Playing track immediately: {}", session.id(), track.title());
         scheduler.addNext(track);
         skip();
     }
 
     @Override
     public Optional<Track> skip() {
-        log.info("Session {}: Skipping track", session.id());
         Optional<Track> nextTrack = scheduler.next();
-        nextTrack.ifPresent(this::playTrack);
+        if (nextTrack.isPresent()) {
+            logger.info("Session {}: Skipping to next track: {}", session.id(), nextTrack.get().title());
+            playTrack(nextTrack.get());
+        } else {
+            logger.info("Session {}: No more tracks in queue, can't skip", session.id());
+            onQueueEnd();
+        }
         return nextTrack;
     }
 
     @Override
     public Optional<Track> previous() {
-        log.info("Session {}: Playing previous track", session.id());
         Optional<Track> previousTrack = scheduler.previous();
-        previousTrack.ifPresent(this::playTrack);
+        if (previousTrack.isPresent()) {
+            logger.info("Session {}: Now playing previous track: {}", session.id(), previousTrack.get().title());
+            playTrack(previousTrack.get());
+        } else {
+            logger.warn("Session {}: No previous track available to play", session.id());
+        }
         return previousTrack;
     }
 
     @Override
     public void pause() {
         if (state.compareAndSet(PlayerState.PLAYING, PlayerState.PAUSED)) {
-            log.info("Session {}: Pausing player", session.id());
-            lavaplayer.setPaused(true);
+            logger.info("Session {}: Pausing player", session.id());
+            lavaPlayer.setPaused(true);
+        } else {
+            logger.warn("Session {}: Cannot pause player, current state is {}", session.id(), state.get());
+            if (state.get() == PlayerState.PAUSED) {
+                logger.info("Session {}: Player is already paused", session.id());
+            } else {
+                logger.warn("Session {}: Player is not in a state that allows pausing", session.id());
+            }
         }
     }
 
     @Override
     public void resume() {
+        // Allow resuming from PAUSED or if the player is STOPPED (end of queue)
         if (state.compareAndSet(PlayerState.PAUSED, PlayerState.PLAYING)) {
-            log.info("Session {}: Resuming player", session.id());
-            lavaplayer.setPaused(false);
+            logger.info("Session {}: Resuming player", session.id());
+            lavaPlayer.setPaused(false);
+        } else if (state.get() == PlayerState.STOPPED && scheduler.getCurrentTrack().isPresent()) {
+            // If stopped but there's a track, try to play it (handles end-of-queue resume)
+            logger.info("Session {}: Resuming player from stopped state with current track", session.id());
+            playTrack(scheduler.getCurrentTrack().get());
+        } else {
+            logger.warn("Session {}: Cannot resume player, current state is {}", session.id(), state.get());
         }
     }
 
     @Override
-    public void stop() {
-        log.info("Session {}: Stopping player and clearing all tracks", session.id());
+    public void stopAndClear() {
+        logger.info("Session {}: Stopping player and clearing all tracks", session.id());
         scheduler.clearAll();
-        stopPlayerAndClear();
+        onQueueEnd();
     }
 
     @Override
     public void clearQueue() {
-        log.info("Session {}: Clearing upcoming tracks from queue", session.id());
+        logger.info("Session {}: Clearing upcoming tracks from queue", session.id());
         scheduler.clearQueue();
     }
 
     private void playTrack(Track track) {
+        state.set(PlayerState.LOADING);
         playerManager.loadItem(track.identifier(), new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack loadedTrack) {
-                log.info("Session {}: Now playing '{}'", session.id(), loadedTrack.getInfo().title);
+                logger.info("Session {}: Now playing '{}'", session.id(), loadedTrack.getInfo().title);
                 state.set(PlayerState.PLAYING);
-                lavaplayer.playTrack(loadedTrack);
+                lavaPlayer.playTrack(loadedTrack);
             }
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
-                log.warn("Session {}: Expected a single track, but got a playlist. Playing first track.", session.id());
+                logger.warn("Session {}: Expected a single track, but got a playlist. Playing first track.", session.id());
                 trackLoaded(playlist.getTracks().getFirst());
             }
             @Override
             public void noMatches() {
-                log.error("Session {}: Could not find a match for track identifier '{}'. Skipping.", session.id(), track.identifier());
+                logger.error("Session {}: Could not find a match for track identifier '{}'. Skipping.", session.id(), track.identifier());
                 onTrackEnd();
             }
             @Override
             public void loadFailed(FriendlyException exception) {
-                log.error("Session {}: Failed to load track identifier '{}': {}", session.id(), track.identifier(), exception.getMessage());
+                logger.error("Session {}: Failed to load track identifier '{}': {}", session.id(), track.identifier(), exception.getMessage());
                 onTrackEnd();
             }
         });
-    }
-
-    private void stopPlayerAndClear() {
-        log.info("Session {}: Queue is empty, player stopped", session.id());
-        state.set(PlayerState.STOPPED);
-        lavaplayer.stopTrack();
-        scheduler.clearQueue();
     }
 
     @Override
@@ -143,6 +162,7 @@ public class LavalinkPlayer implements com.gammatunes.backend.audio.api.AudioPla
 
     @Override
     public PlayerState getState() {
+        logger.debug("Session {}: Current player state is {}", session.id(), state.get());
         return state.get();
     }
 
@@ -151,8 +171,14 @@ public class LavalinkPlayer implements com.gammatunes.backend.audio.api.AudioPla
         return session;
     }
 
+    private void onQueueEnd() {
+        logger.info("Session {}: Queue is empty, player stopped.", session.id());
+        state.set(PlayerState.STOPPED);
+        lavaPlayer.stopTrack();
+    }
+
     void onTrackEnd() {
-        log.debug("Session {}: Track ended, trying to play next in queue", session.id());
+        logger.debug("Session {}: Track ended, trying to play next in queue", session.id());
         skip();
     }
 }

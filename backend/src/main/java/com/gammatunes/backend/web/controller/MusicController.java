@@ -77,7 +77,7 @@ public class MusicController {
         log.info("Received request to stop track for session: {}", sessionId);
         Session session = new Session(sessionId);
         var player = audioService.getOrCreatePlayer(session);
-        player.stop();
+        player.stopAndClear();
         return ResponseEntity.ok(new StatusResponse("Player stopped for session " + sessionId));
     }
 

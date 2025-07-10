@@ -51,7 +51,7 @@ public interface AudioPlayer {
     /**
      * Stops the player completely, clears the queue, and disconnects from the voice channel.
      */
-    void stop();
+    void stopAndClear();
 
     /**
      * Skips the currently playing track and starts playing the next one in the queue, if available.
@@ -94,4 +94,5 @@ public interface AudioPlayer {
      * @return The player's {@link Session}.
      */
     Session getSession();
+
 }
