@@ -15,23 +15,19 @@ import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
-/**
- * Command to play a song or add it to the queue in the voice channel.
- * This command interacts with the audio service to handle track loading and playback.
- */
 @Component
-public class PlayCommand implements Command {
+public class PlayNowCommand implements Command {
 
-    private static final Logger logger = LoggerFactory.getLogger(PlayCommand.class);
+    private static final Logger logger = LoggerFactory.getLogger(PlayNowCommand.class);
     private final AudioService audioService;
 
-    public PlayCommand(AudioService audioService) {
+    public PlayNowCommand(AudioService audioService) {
         this.audioService = audioService;
     }
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("play", "Plays a song or adds it to the queue.")
+        return Commands.slash("playnow", "Plays the current track immediately in the voice channel.")
             .addOption(OptionType.STRING, "query", "The song URL or search term.", true);
     }
 
@@ -46,8 +42,8 @@ public class PlayCommand implements Command {
         try {
             CommandUtil.connectToChannel(audioService, event);
             String guildId = event.getGuild().getId();
-            audioService.play(new Session(guildId), query);
-            event.getHook().sendMessage("✅ Enqueued: `" + query + "`").queue();
+            audioService.playNow(new Session(guildId), query);
+            event.getHook().sendMessage("✅ Playing now: `" + query + "`").queue();
         } catch (TrackLoadException e) {
             logger.error("Failed to load track for guild {}: {}", event.getGuild().getId(), e.getMessage());
             event.getHook().sendMessage("❌ An error occurred while loading the track: " + e.getMessage()).queue();
@@ -57,4 +53,3 @@ public class PlayCommand implements Command {
         }
     }
 }
-

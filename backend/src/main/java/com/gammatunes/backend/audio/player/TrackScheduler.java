@@ -24,6 +24,10 @@ public class TrackScheduler {
         tracks.add(track);
     }
 
+    public void addNext(Track track) {
+        tracks.add(currentIndex + 1, track);
+    }
+
     /**
      * Moves to and returns the next track in the list.
      * @return An Optional containing the next track, or empty if at the end of the list.
@@ -34,7 +38,7 @@ public class TrackScheduler {
             return Optional.of(tracks.get(currentIndex));
         }
         // We've reached the end of the queue.
-        currentIndex = tracks.size() -1; // Keep index at the end
+        currentIndex = tracks.size() - 1; // Keep index at the end
         return Optional.empty();
     }
 

@@ -32,36 +32,12 @@ jobs:
         run: ./gradlew --no-daemon clean verifyAll
 
   # ────────────────────────────────────────────────────────────────
-  # 2) RUN SLOW E2E TESTS
-  #    Only runs on a push to the main branch, after fast tests pass.
-  # ────────────────────────────────────────────────────────────────
-  e2e-test:
-    name: Backend • End-to-End Tests
-    needs: fast-tests
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: ☕ Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: gradle
-
-      - name: ✅ Run end-to-end tests
-        run: ./gradlew --no-daemon :backend:e2eTest
-
-  # ────────────────────────────────────────────────────────────────
-  # 3) BUILD AND PUSH DOCKER IMAGE
+  # 2) BUILD AND PUSH DOCKER IMAGE
   #    Only runs on a push to main, after ALL tests have passed.
   # ────────────────────────────────────────────────────────────────
   build-and-push:
     name: 🐳 Build & Push Docker Image
-    needs: [fast-tests, e2e-test]
+    needs: [fast-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -95,7 +71,7 @@ jobs:
           cache-to:   type=gha,mode=max
 
   # ────────────────────────────────────────────────────────────────
-  # 4) DEPLOY TO STAGING
+  # 3) DEPLOY TO STAGING
   #    Only runs on a push to main, after the image is built.
   # ────────────────────────────────────────────────────────────────
 #  deploy-staging:

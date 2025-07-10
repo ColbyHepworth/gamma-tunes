@@ -53,15 +53,12 @@ The project employs a multi-layered testing strategy that follows the "Testing P
 
 **Integration Tests:** More complex tests verify the interaction between different components. These tests use Testcontainers to spin up real dependencies (like a Lavalink server) in a controlled environment. They live in the src/integrationTest directory and are run on every pull request.
 
-**End-to-End (E2E) Tests:** A small number of high-value E2E tests validate a full user journey through the entire application stack. These tests use Testcontainers to run the project's docker-compose.yml file and then make real API calls to the running backend service, providing the ultimate confidence that all services work together correctly.
-
 ### Test Layers
 
 - **🔬 Unit Tests** - A large suite of fast-running unit tests verifies individual classes in isolation. These tests use Mockito to mock dependencies and live in the `src/test` directory. They are run on every commit.
 
 - **🔗 Integration Tests** - More complex tests verify the interaction between different components. These tests use Testcontainers to spin up real dependencies (like a Lavalink server) in a controlled environment. They live in the `src/integrationTest` directory and are run on every pull request.
 
-- **🎭 End-to-End (E2E) Tests** - A small number of high-value E2E tests validate a full user journey through the entire application stack. These tests use Testcontainers to run the project's `docker-compose.yml` file and then make real API calls to the running backend service, providing the ultimate confidence that all services work together correctly.
 
 ## 🚀 Local Development & Usage
 

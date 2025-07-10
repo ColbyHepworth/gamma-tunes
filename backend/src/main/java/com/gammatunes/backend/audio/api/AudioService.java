@@ -29,4 +29,5 @@ public interface AudioService {
      */
     void play(Session session, String query) throws TrackLoadException;
 
+    void playNow(Session session, String query) throws TrackLoadException;
 }

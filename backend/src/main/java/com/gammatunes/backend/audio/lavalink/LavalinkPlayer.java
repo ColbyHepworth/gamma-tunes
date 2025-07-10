@@ -38,12 +38,19 @@ public class LavalinkPlayer implements com.gammatunes.backend.audio.api.AudioPla
     }
 
     @Override
-    public void enqueue(Track track) {
+    public void play(Track track) {
         log.debug("Session {}: Enqueuing track '{}'", session.id(), track.title());
         scheduler.enqueue(track);
         if (state.get() == PlayerState.STOPPED) {
             skip(); // Start playing if stopped
         }
+    }
+
+    @Override
+    public void playNow(Track track) {
+        log.debug("Session {}: Pushing track '{}'", session.id(), track.title());
+        scheduler.addNext(track);
+        skip();
     }
 
     @Override

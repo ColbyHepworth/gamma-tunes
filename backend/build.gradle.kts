@@ -2,8 +2,8 @@
    • Give each plugin its version here so the Spring-Boot BOM is applied.
    • The IDEA plugin lets IntelliJ mark the custom source-set.                */
 plugins {
-    id("org.springframework.boot")            version "3.3.1"
-    id("io.spring.dependency-management")     version "1.1.7"
+    id("org.springframework.boot") version "3.3.1"
+    id("io.spring.dependency-management") version "1.1.7"
     idea
 }
 
@@ -20,51 +20,24 @@ sourceSets {
     val main by getting
     val integrationTest by creating {
         compileClasspath += main.output
-        runtimeClasspath  += main.output
+        runtimeClasspath += main.output
     }
 }
 
 /* ───────────── 4. CONFIGURATION INHERITANCE ─────────────   */
 configurations {
     named("integrationTestImplementation") { extendsFrom(getByName("testImplementation")) }
-    named("integrationTestRuntimeOnly")     { extendsFrom(getByName("testRuntimeOnly")) }
+    named("integrationTestRuntimeOnly") { extendsFrom(getByName("testRuntimeOnly")) }
 }
 
-/* ───────────── 5. TEST TASKS ─────────────
-   • integrationTest – fast component tests
-   • e2eTest        – slow full-stack tests
-   • smokeTest      – hits running stack via Docker Compose                   */
+/* ───────────── 5. TEST TASKS ───────────── */
 
 val integrationTest by tasks.registering(Test::class) {
-    description      = "Runs component integration tests using Testcontainers"
-    group            = "verification"
-    testClassesDirs  = sourceSets["integrationTest"].output.classesDirs
-    classpath        = sourceSets["integrationTest"].runtimeClasspath
+    description = "Runs component integration tests using Testcontainers"
+    group = "verification"
+    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+    classpath = sourceSets["integrationTest"].runtimeClasspath
     shouldRunAfter(tasks.named("test"))
-    filter {
-        excludeTestsMatching("*SmokeIT")
-        excludeTestsMatching("*E2E*")
-    }
-}
-
-val e2eTest by tasks.registering(Test::class) {
-    description      = "Runs slow E2E tests against the full stack via Testcontainers"
-    group            = "verification"
-    testClassesDirs  = sourceSets["integrationTest"].output.classesDirs
-    classpath        = sourceSets["integrationTest"].runtimeClasspath
-    shouldRunAfter(integrationTest)
-    filter { includeTestsMatching("*E2E*") }
-}
-
-// 6-c) Smoke Tests (require running stack)
-val smokeTest by tasks.registering(Test::class) {
-    description      = "Runs smoke tests against a running application stack"
-    group            = "verification"
-    testClassesDirs  = sourceSets["integrationTest"].output.classesDirs
-    classpath        = sourceSets["integrationTest"].runtimeClasspath
-    filter { includeTestsMatching("*SmokeIT") }
-    dependsOn(rootProject.tasks.named("composeUp"))
-    finalizedBy(rootProject.tasks.named("composeDown"))
 }
 
 /* ───────────── 6. LIFECYCLE HOOK ─────────────

@@ -44,9 +44,9 @@ class LavalinkPlayerTest {
     }
 
     @Test
-    void enqueue_whenPlayerIsStopped_dequeuesAndStartsPlayback() {
+    void play_whenPlayerIsStopped_dequeuesAndStartsPlayback() {
         // Act
-        lavalinkPlayer.enqueue(testTrack);
+        lavalinkPlayer.play(testTrack);
 
         // Assert
         assertEquals(PlayerState.LOADING, lavalinkPlayer.getState(), "Player state should be LOADING");
@@ -57,13 +57,13 @@ class LavalinkPlayerTest {
     }
 
     @Test
-    void enqueue_whenPlayerIsPlaying_onlyAddsToQueue() {
+    void play_whenPlayerIsPlaying_onlyAddsToQueue() {
         // Arrange
         // Manually set the state to PLAYING to simulate an active player
         lavalinkPlayer.state.set(PlayerState.PLAYING);
 
         // Act
-        lavalinkPlayer.enqueue(testTrack);
+        lavalinkPlayer.play(testTrack);
 
         // Assert
         assertEquals(PlayerState.PLAYING, lavalinkPlayer.getState(), "Player state should remain PLAYING");
@@ -101,8 +101,10 @@ class LavalinkPlayerTest {
     @Test
     void skip_whenCalled_stopsCurrentTrack() {
         // Arrange
-        lavalinkPlayer.currentlyPlaying.set(testTrack);
-
+        // Enqueue a track to set it as the currently playing one.
+        lavalinkPlayer.play(testTrack);
+        // Manually set the state to PLAYING to ensure the correct test conditions.
+        lavalinkPlayer.state.set(PlayerState.PLAYING);
         // Act
         lavalinkPlayer.skip();
 

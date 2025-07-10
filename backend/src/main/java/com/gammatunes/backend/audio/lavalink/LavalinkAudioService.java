@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class LavalinkAudioService implements AudioService {
 
-    private static final Logger log = LoggerFactory.getLogger(LavalinkAudioService.class);
+    private static final Logger logger = LoggerFactory.getLogger(LavalinkAudioService.class);
     private final AudioSourceManager audioSourceManager;
     private final AudioPlayerManager playerManager;
     private final Map<String, AudioPlayer> players = new ConcurrentHashMap<>();
@@ -34,17 +34,25 @@ public class LavalinkAudioService implements AudioService {
     @Override
     public AudioPlayer getOrCreatePlayer(Session session) {
         return players.computeIfAbsent(session.id(), id -> {
-            log.info("Creating new lavaplayer adapter for session: {}", id);
+            logger.info("Creating new lavaplayer adapter for session: {}", id);
             com.sedmelluq.discord.lavaplayer.player.AudioPlayer lavaplayer = playerManager.createPlayer();
-            // Pass the playerManager to our adapter so it can load tracks
             return new LavalinkPlayer(session, lavaplayer, playerManager);
         });
     }
 
     @Override
     public void play(Session session, String query) throws TrackLoadException {
+        logger.info("Playing lavaplayer query: {}", query);
         AudioPlayer player = getOrCreatePlayer(session);
         Track track = audioSourceManager.resolveTrack(query);
-        player.enqueue(track);
+        player.play(track);
+    }
+
+    @Override
+    public void playNow(Session session, String query) throws TrackLoadException {
+        logger.info("Playing lavaplayer query immediately: {}", query);
+        AudioPlayer player = getOrCreatePlayer(session);
+        Track track = audioSourceManager.resolveTrack(query);
+        player.playNow(track);
     }
 }

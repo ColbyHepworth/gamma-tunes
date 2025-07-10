@@ -2,10 +2,14 @@ package com.gammatunes.backend.bot.util;
 
 import com.gammatunes.backend.audio.api.AudioPlayer;
 import com.gammatunes.backend.audio.api.AudioService;
+import com.gammatunes.backend.audio.lavalink.LavalinkPlayer;
+import com.gammatunes.backend.bot.audio.AudioPlayerSendHandler;
 import com.gammatunes.backend.common.model.Session;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.util.Objects;
 
@@ -16,6 +20,8 @@ public final class CommandUtil {
 
     // Private constructor to prevent instantiation
     private CommandUtil() {}
+
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CommandUtil.class);
 
     /**
      * Performs preliminary checks for any command that requires the user to be in a voice channel.
@@ -51,4 +57,26 @@ public final class CommandUtil {
         String guildId = Objects.requireNonNull(event.getGuild()).getId();
         return audioService.getOrCreatePlayer(new Session(guildId));
     }
+
+    /**
+     * Connects the bot to the user's voice channel and sets up the audio sending handler.
+     */
+    public static void connectToChannel(AudioService audioService, SlashCommandInteractionEvent event) {
+        Member member = event.getMember();
+        GuildVoiceState voiceState = member.getVoiceState();
+        AudioChannel userChannel = voiceState.getChannel();
+        String guildId = event.getGuild().getId();
+
+        com.gammatunes.backend.audio.api.AudioPlayer player = audioService.getOrCreatePlayer(new Session(guildId));
+        com.sedmelluq.discord.lavaplayer.player.AudioPlayer realLavaPlayer = ((LavalinkPlayer) player).getRealPlayer();
+
+        AudioManager audioManager = event.getGuild().getAudioManager();
+        // Only set the handler if we're not already connected
+        if (!audioManager.isConnected()) {
+            audioManager.setSendingHandler(new AudioPlayerSendHandler(realLavaPlayer));
+            audioManager.openAudioConnection(userChannel);
+            logger.info("Joining voice channel {} in guild {}", userChannel.getName(), guildId);
+        }
+    }
+
 }

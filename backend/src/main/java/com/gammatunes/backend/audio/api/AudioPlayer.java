@@ -19,8 +19,17 @@ public interface AudioPlayer {
      *
      * @param track The track to enqueue and potentially play.
      */
-    void enqueue(Track track);
+    void play(Track track);
 
+
+    /**
+     * Immediately plays a track in front of the current one.
+     * <p>
+     * This method is used to push a track to the front of the queue, starting playback immediately.
+     *
+     * @param track The track to play now.
+     */
+    void playNow(Track track);
 
     /**
      * Clears the entire queue of tracks.
