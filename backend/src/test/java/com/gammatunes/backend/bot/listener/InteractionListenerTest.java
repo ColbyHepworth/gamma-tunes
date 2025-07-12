@@ -1,6 +1,8 @@
 package com.gammatunes.backend.bot.listener;
 
+import com.gammatunes.backend.audio.api.AudioService;
 import com.gammatunes.backend.bot.command.Command;
+import com.gammatunes.backend.bot.view.PlayerMessageManager;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -18,7 +20,7 @@ import static org.mockito.Mockito.*;
  * Unit tests for the CommandListener.
  */
 @ExtendWith(MockitoExtension.class)
-class CommandListenerTest {
+class InteractionListenerTest {
 
     @Mock
     private SlashCommandInteractionEvent mockEvent;
@@ -29,12 +31,21 @@ class CommandListenerTest {
     @Mock
     private User mockUser;
 
+    @Mock
+    private AudioService mockAudioService;
+
+    @Mock
+    private PlayerMessageManager mockMessageManager;
+
     @Test
     void onSlashCommandInteraction_whenCommandExists_executesCorrectCommand() {
         // Arrange
         Command mockCommand = mock(Command.class);
         when(mockCommand.getCommandData()).thenReturn(Commands.slash("play", "A test command"));
-        CommandListener commandListener = new CommandListener(List.of(mockCommand));
+        InteractionListener interactionListener = new InteractionListener(
+            List.of(mockCommand),
+            mockAudioService,
+            mockMessageManager);
 
         when(mockEvent.getName()).thenReturn("play");
         // Stub the user for the logger call inside the listener
@@ -42,7 +53,7 @@ class CommandListenerTest {
         when(mockUser.getName()).thenReturn("TestUser#1234");
 
         // Act
-        commandListener.onSlashCommandInteraction(mockEvent);
+        interactionListener.onSlashCommandInteraction(mockEvent);
 
         // Assert
         verify(mockCommand, times(1)).execute(mockEvent);
@@ -51,14 +62,16 @@ class CommandListenerTest {
     @Test
     void onSlashCommandInteraction_whenCommandDoesNotExist_repliesWithUnknownCommand() {
         // Arrange
-        CommandListener commandListener = new CommandListener(List.of());
+        InteractionListener interactionListener = new InteractionListener(
+            List.of(),
+            mockAudioService,
+            mockMessageManager);
         when(mockEvent.getName()).thenReturn("foo");
         when(mockEvent.reply("Unknown command.")).thenReturn(mockReplyCallbackAction);
         when(mockReplyCallbackAction.setEphemeral(true)).thenReturn(mockReplyCallbackAction);
-        // This test does NOT need the user stubbed, as the logger is not called.
 
         // Act
-        commandListener.onSlashCommandInteraction(mockEvent);
+        interactionListener.onSlashCommandInteraction(mockEvent);
 
         // Assert
         verify(mockEvent).reply("Unknown command.");
@@ -73,7 +86,10 @@ class CommandListenerTest {
         when(mockCommand.getCommandData()).thenReturn(Commands.slash("play", "A test command"));
         doThrow(new RuntimeException("Test exception")).when(mockCommand).execute(mockEvent);
 
-        CommandListener commandListener = new CommandListener(List.of(mockCommand));
+        InteractionListener interactionListener = new InteractionListener(
+            List.of(mockCommand),
+            mockAudioService,
+            mockMessageManager);
 
         when(mockEvent.getName()).thenReturn("play");
         // Stub the user for the logger call inside the listener
@@ -84,7 +100,7 @@ class CommandListenerTest {
         when(mockReplyCallbackAction.setEphemeral(true)).thenReturn(mockReplyCallbackAction);
 
         // Act
-        commandListener.onSlashCommandInteraction(mockEvent);
+        interactionListener.onSlashCommandInteraction(mockEvent);
 
         // Assert
         verify(mockEvent).reply("An unexpected error occurred. Please try again later.");

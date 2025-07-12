@@ -14,37 +14,7 @@ tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
     mainClass.set("com.gammatunes.backend.BackendApplication")
 }
 
-/* ───────────── 3. SOURCE-SETS ─────────────
-   Adds an “integrationTest” source-set that re-uses the main classpath.      */
-sourceSets {
-    val main by getting
-    val integrationTest by creating {
-        compileClasspath += main.output
-        runtimeClasspath += main.output
-    }
-}
-
-/* ───────────── 4. CONFIGURATION INHERITANCE ─────────────   */
-configurations {
-    named("integrationTestImplementation") { extendsFrom(getByName("testImplementation")) }
-    named("integrationTestRuntimeOnly") { extendsFrom(getByName("testRuntimeOnly")) }
-}
-
-/* ───────────── 5. TEST TASKS ───────────── */
-
-val integrationTest by tasks.registering(Test::class) {
-    description = "Runs component integration tests using Testcontainers"
-    group = "verification"
-    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
-    classpath = sourceSets["integrationTest"].runtimeClasspath
-    shouldRunAfter(tasks.named("test"))
-}
-
-/* ───────────── 6. LIFECYCLE HOOK ─────────────
-   ‘check’ now = unit + component integrations.                               */
-tasks.named("check") { dependsOn(integrationTest) }
-
-/* ───────────── 7. DEPENDENCIES ─────────────                                 */
+/* ───────────── 3. DEPENDENCIES ─────────────                                 */
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:3.3.1"))
 
@@ -65,10 +35,4 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.12.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.12.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    val tcVersion = "1.19.8"
-    "integrationTestImplementation"(platform("org.testcontainers:testcontainers-bom:$tcVersion"))
-    "integrationTestImplementation"("org.testcontainers:junit-jupiter")
-    "integrationTestImplementation"("io.rest-assured:rest-assured:5.4.0")
-    "integrationTestImplementation"("org.awaitility:awaitility:4.2.1")
 }

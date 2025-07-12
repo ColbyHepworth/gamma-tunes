@@ -88,6 +88,16 @@ public interface AudioPlayer {
      */
     PlayerState getState();
 
+
+    /**
+     * Gets the position of the currently playing track in milliseconds.
+     * <p>
+     * This is the current playback position, not the total duration of the track.
+     *
+     * @return The current position in milliseconds.
+     */
+    long getTrackPosition();
+
     /**
      * Gets the session this player is associated with.
      *

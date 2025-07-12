@@ -167,6 +167,15 @@ public class LavalinkPlayer implements com.gammatunes.backend.audio.api.AudioPla
     }
 
     @Override
+    public long getTrackPosition() {
+        com.sedmelluq.discord.lavaplayer.track.AudioTrack playingTrack = lavaPlayer.getPlayingTrack();
+        if (playingTrack != null) {
+            return playingTrack.getPosition();
+        }
+        return 0;
+    }
+
+    @Override
     public Session getSession() {
         return session;
     }

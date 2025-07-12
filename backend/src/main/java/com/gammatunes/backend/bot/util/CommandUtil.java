@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.util.Objects;
@@ -35,15 +36,18 @@ public final class CommandUtil {
 
         Member member = event.getMember();
         if (member == null) {
+            logger.info("Member is not in a voice channel.");
             event.getHook().sendMessage("❌ This command can only be used in a server.").queue();
             return false;
         }
 
         GuildVoiceState voiceState = member.getVoiceState();
         if (voiceState == null || !voiceState.inAudioChannel()) {
+            logger.info("Member is not in a voice channel.");
             event.getHook().sendMessage("❌ You must be in a voice channel to use this command.").queue();
             return false;
         }
+        logger.info("Member is in a voice channel.");
         return true;
     }
 
@@ -54,6 +58,11 @@ public final class CommandUtil {
      * @return The AudioPlayer for the guild.
      */
     public static AudioPlayer getPlayer(AudioService audioService, SlashCommandInteractionEvent event) {
+        String guildId = Objects.requireNonNull(event.getGuild()).getId();
+        return audioService.getOrCreatePlayer(new Session(guildId));
+    }
+
+    public static AudioPlayer getPlayer(AudioService audioService, ButtonInteractionEvent event) {
         String guildId = Objects.requireNonNull(event.getGuild()).getId();
         return audioService.getOrCreatePlayer(new Session(guildId));
     }
@@ -76,6 +85,8 @@ public final class CommandUtil {
             audioManager.setSendingHandler(new AudioPlayerSendHandler(realLavaPlayer));
             audioManager.openAudioConnection(userChannel);
             logger.info("Joining voice channel {} in guild {}", userChannel.getName(), guildId);
+        } else {
+            logger.info("Already connected to voice channel in guild {}", guildId);
         }
     }
 

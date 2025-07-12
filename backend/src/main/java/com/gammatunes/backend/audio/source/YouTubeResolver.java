@@ -78,7 +78,6 @@ public class YouTubeResolver implements TrackResolver {
                 loadedTrack.getInfo().author,
                 Duration.ofMillis(loadedTrack.getDuration()),
                 loadedTrack.getInfo().uri,
-                // You could extract a thumbnail URL here if available, e.g., from YouTube API
                 null
             );
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
