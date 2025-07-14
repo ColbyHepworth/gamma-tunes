@@ -36,13 +36,13 @@ This project was designed from the ground up to be **modular**, **scalable**, an
 
 - **📦 Package-by-Feature** - The codebase is organized by business capability (`audio`, `bot`, `web`, `common`) rather than by technical layers (`services`, `models`). This makes the system easier to navigate and reason about.
 
-- **🔧 Composition over Inheritance** - The command structure favors composition by using helper utilities (`CommandUtil`) over a rigid, deep inheritance hierarchy. This provides maximum flexibility for creating new and unique commands in the future.
+- **🔧 Composition over Inheritance** - The commandHandler structure favors composition by using helper utilities (`CommandUtil`) over a rigid, deep inheritance hierarchy. This provides maximum flexibility for creating new and unique commandHandlers in the future.
 
 ### Design Patterns in Practice
 
 - **🔌 Adapter Pattern** - The `LavalinkPlayer` class acts as an Adapter between our application's generic `AudioPlayer` interface and the specific API of the external lavaplayer library. This completely decouples our business logic from the audio provider, making it possible to swap out lavaplayer in the future with minimal code changes.
 
-- **📋 Template Method Pattern** - The abstract `PlayerCommand` class uses the Template Method pattern to handle boilerplate logic for simple commands (like permission checks and deferring replies), allowing concrete commands like `PauseCommand` and `SkipCommand` to be incredibly concise and focused on their specific action.
+- **📋 Template Method Pattern** - The abstract `PlayerCommand` class uses the Template Method pattern to handle boilerplate logic for simple commandHandlers (like permission checks and deferring replies), allowing concrete commandHandlers like `PauseCommand` and `SkipCommand` to be incredibly concise and focused on their specific action.
 
 - **🎯 Singleton Pattern** - Critical, stateless services like `AudioService` and `JdaManager` are managed as singletons by the Spring IoC container for efficiency and a centralized point of control.
 

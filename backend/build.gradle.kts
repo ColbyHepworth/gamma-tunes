@@ -16,8 +16,13 @@ tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
 
 /* ───────────── 3. DEPENDENCIES ─────────────                                 */
 dependencies {
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.3.1"))
 
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
+
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.3.1"))
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("dev.arbjerg:lavaplayer:2.2.4")
