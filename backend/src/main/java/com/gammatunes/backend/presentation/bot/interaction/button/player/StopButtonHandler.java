@@ -1,6 +1,6 @@
 package com.gammatunes.backend.presentation.bot.interaction.button.player;
 
-import com.gammatunes.backend.presentation.bot.control.DiscordAudioController;
+import com.gammatunes.backend.presentation.bot.player.controller.DiscordAudioController;
 import com.gammatunes.backend.presentation.bot.interaction.button.ButtonHandler;
 
 import lombok.RequiredArgsConstructor;

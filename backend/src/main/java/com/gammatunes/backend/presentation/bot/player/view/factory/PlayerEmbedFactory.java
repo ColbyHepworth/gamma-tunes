@@ -1,4 +1,4 @@
-package com.gammatunes.backend.presentation.bot.player.view;
+package com.gammatunes.backend.presentation.bot.player.view.factory;
 
 import com.gammatunes.backend.domain.model.PlayerState;
 import com.gammatunes.backend.domain.model.Track;

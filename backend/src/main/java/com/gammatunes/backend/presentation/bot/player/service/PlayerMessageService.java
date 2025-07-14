@@ -3,7 +3,7 @@ package com.gammatunes.backend.presentation.bot.player.service;
 import com.gammatunes.backend.application.port.out.PlayerRegistryPort;
 import com.gammatunes.backend.domain.player.AudioPlayer;
 import com.gammatunes.backend.domain.player.event.PlayerStateChanged;
-import com.gammatunes.backend.presentation.bot.player.view.PlayerEmbedFactory;
+import com.gammatunes.backend.presentation.bot.player.view.factory.PlayerEmbedFactory;
 import com.gammatunes.backend.domain.model.Session;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;

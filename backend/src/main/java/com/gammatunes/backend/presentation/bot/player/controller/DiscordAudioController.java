@@ -1,4 +1,4 @@
-package com.gammatunes.backend.presentation.bot.control;
+package com.gammatunes.backend.presentation.bot.player.controller;
 
 import com.gammatunes.backend.application.port.in.AudioControlUseCase;
 import com.gammatunes.backend.domain.model.VoiceConnectRequest;

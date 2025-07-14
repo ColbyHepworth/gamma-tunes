@@ -1,7 +1,7 @@
 package com.gammatunes.backend.presentation.bot.interaction.command.player;
 
 
-import com.gammatunes.backend.presentation.bot.control.DiscordAudioController;
+import com.gammatunes.backend.presentation.bot.player.controller.DiscordAudioController;
 import com.gammatunes.backend.presentation.bot.interaction.command.CommandHandler;
 import com.gammatunes.backend.presentation.bot.player.service.PlayerMessageService;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;

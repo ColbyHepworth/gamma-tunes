@@ -1,7 +1,7 @@
 package com.gammatunes.backend.presentation.bot.interaction.command;
 
 import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
-import com.gammatunes.backend.presentation.bot.control.DiscordAudioController;
+import com.gammatunes.backend.presentation.bot.player.controller.DiscordAudioController;
 import com.gammatunes.backend.presentation.bot.exception.MemberNotInVoiceChannelException;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
