@@ -21,7 +21,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("dev.arbjerg:lavaplayer:2.2.4")
-    implementation("net.dv8tion:JDA:5.0.0-beta.24")
+    implementation("net.dv8tion:JDA:6.0.0-preview")
 
     implementation("dev.lavalink.youtube:v2:1.13.3")
 
