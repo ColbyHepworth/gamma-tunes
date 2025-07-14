@@ -2,7 +2,7 @@
    • Give each plugin its version here so the Spring-Boot BOM is applied.
    • The IDEA plugin lets IntelliJ mark the custom source-set.                */
 plugins {
-    id("org.springframework.boot") version "3.3.1"
+    id("org.springframework.boot") version "3.5.3"
     id("io.spring.dependency-management") version "1.1.7"
     idea
 }
