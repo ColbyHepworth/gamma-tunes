@@ -1,8 +1,10 @@
 package com.gammatunes.backend.presentation.bot.interaction.command;
 
+import com.gammatunes.backend.domain.model.PlayerOutcome;
 import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
-import com.gammatunes.backend.presentation.bot.player.controller.DiscordAudioController;
+import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 import com.gammatunes.backend.presentation.bot.exception.MemberNotInVoiceChannelException;
+import com.gammatunes.backend.presentation.bot.player.view.dto.PlayerOutcomeResult;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -17,47 +19,41 @@ public abstract class PlayerCommandHandler implements CommandHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PlayerCommandHandler.class);
 
-    protected final DiscordAudioController discordAudioController;
+    protected final DiscordPlayerController discordPlayerController;
 
-    public PlayerCommandHandler(DiscordAudioController discordAudioController) {
-        this.discordAudioController = discordAudioController;
+
+    public PlayerCommandHandler(DiscordPlayerController discordPlayerController) {
+        this.discordPlayerController = discordPlayerController;
     }
 
     /**
-     * Runs the common checks and executes the player command.
-     * This method is called when the command is invoked.
-     * @param event The event containing the command interaction details.
+     * Returns the command data for this player command.
+     * Subclasses should implement this method to provide specific command details.
+     *
+     * @return PlayerOutcomeResult for the slash command
      */
-    @Override
-    public final void execute(SlashCommandInteractionEvent event) {
+    public final PlayerOutcomeResult execute(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
         try {
             Guild  g = event.getGuild();
             Member m = event.getMember();
             if (g == null || m == null) {
                 event.getHook().sendMessage("❌ Guild only.").queue();
-                return;
+                return new PlayerOutcomeResult(PlayerOutcome.ERROR, null);
             }
-            handle(m, event);                                // may throw
-            event.getHook().editOriginal(getSuccessMessage()).queue();
+            return handle(m, event);
         } catch (TrackLoadException x) {
-            event.getHook().editOriginal("❌ Track failed: " + x.getMessage()).queue();
+            logger.error(x.getMessage(), x);
+            return new PlayerOutcomeResult(PlayerOutcome.ERROR, "❌ Track failed: " + x.getMessage());
         } catch (MemberNotInVoiceChannelException x) {
-            event.getHook().editOriginal("❌ Join a voice channel first.").queue();
+            logger.warn("Member not in voice channel: {}", x.getMessage());
+            return new PlayerOutcomeResult(PlayerOutcome.ERROR, null);
         } catch (Exception x) {
             logger.error("Unhandled slash command error", x);
-            event.getHook().editOriginal("❌ Unexpected error.").queue();
+            return new PlayerOutcomeResult(PlayerOutcome.ERROR, null);
         }
     }
 
-
-    protected abstract void handle(Member member, SlashCommandInteractionEvent event)
+    protected abstract PlayerOutcomeResult handle(Member member, SlashCommandInteractionEvent event)
         throws TrackLoadException, MemberNotInVoiceChannelException;;
-
-        /**
-     * Returns the success message to be sent after executing the command.
-     * Subclasses should implement this method to provide a specific success message.
-     * @return The success message as a String.
-     */
-    protected abstract String getSuccessMessage();
 }

@@ -1,5 +1,6 @@
 package com.gammatunes.backend.presentation.bot.interaction.command;
 
+import com.gammatunes.backend.presentation.bot.player.view.dto.PlayerOutcomeResult;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 /**
@@ -8,6 +9,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
  */
 public interface QueryCommandHandler extends CommandHandler {
 
-    void execute(SlashCommandInteractionEvent event);
+    PlayerOutcomeResult execute(SlashCommandInteractionEvent event);
     String getQuery(SlashCommandInteractionEvent event);
 }

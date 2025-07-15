@@ -1,9 +1,11 @@
 package com.gammatunes.backend.presentation.bot.interaction.command.player;
 
 import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
-import com.gammatunes.backend.presentation.bot.player.controller.DiscordAudioController;
+import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 import com.gammatunes.backend.presentation.bot.exception.MemberNotInVoiceChannelException;
 import com.gammatunes.backend.presentation.bot.interaction.command.PlayerCommandHandler;
+import com.gammatunes.backend.presentation.bot.player.service.PlayerMessageService;
+import com.gammatunes.backend.presentation.bot.player.view.dto.PlayerOutcomeResult;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -18,8 +20,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class StopCommandHandler extends PlayerCommandHandler {
 
-    public StopCommandHandler(DiscordAudioController discordAudioController) {
-        super(discordAudioController);
+    public StopCommandHandler(DiscordPlayerController discordPlayerController) {
+        super(discordPlayerController);
     }
 
     @Override
@@ -29,12 +31,7 @@ public class StopCommandHandler extends PlayerCommandHandler {
 
 
     @Override
-    protected void handle(Member member, SlashCommandInteractionEvent event) throws TrackLoadException, MemberNotInVoiceChannelException {
-        discordAudioController.stop(member);
-    }
-
-    @Override
-    protected String getSuccessMessage() {
-        return "⏹️ Player stopped and disconnected.";
+    protected PlayerOutcomeResult handle(Member member, SlashCommandInteractionEvent event) throws TrackLoadException, MemberNotInVoiceChannelException {
+        return new PlayerOutcomeResult(discordPlayerController.stop(member), null);
     }
 }

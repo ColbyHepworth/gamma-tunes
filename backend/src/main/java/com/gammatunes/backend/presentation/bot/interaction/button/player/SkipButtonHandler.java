@@ -1,8 +1,9 @@
 package com.gammatunes.backend.presentation.bot.interaction.button.player;
 
 import com.gammatunes.backend.presentation.bot.interaction.button.ButtonHandler;
-import com.gammatunes.backend.presentation.bot.player.controller.DiscordAudioController;
+import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 
+import com.gammatunes.backend.presentation.bot.player.view.dto.PlayerOutcomeResult;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SkipButtonHandler implements ButtonHandler {
 
-    private final DiscordAudioController discordAudioController;
+    private final DiscordPlayerController discordPlayerController;
 
     @Override
     public String id() {
@@ -21,8 +22,7 @@ public class SkipButtonHandler implements ButtonHandler {
     }
 
     @Override
-    public void handle(ButtonInteractionEvent event, Member member) {
-        discordAudioController.skip(member);
-        // TODO: Add success message handling
+    public PlayerOutcomeResult handle(ButtonInteractionEvent event, Member member) {
+        return new PlayerOutcomeResult(discordPlayerController.skip(member), null);
     }
 }

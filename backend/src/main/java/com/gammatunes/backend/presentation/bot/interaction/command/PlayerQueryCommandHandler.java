@@ -1,6 +1,6 @@
 package com.gammatunes.backend.presentation.bot.interaction.command;
 
-import com.gammatunes.backend.presentation.bot.player.controller.DiscordAudioController;
+import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 import com.gammatunes.backend.presentation.bot.exception.NoQueryFoundException;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -14,8 +14,8 @@ public abstract class PlayerQueryCommandHandler extends PlayerCommandHandler imp
 
     private static final Logger logger = LoggerFactory.getLogger(PlayerQueryCommandHandler.class);
 
-    public PlayerQueryCommandHandler(DiscordAudioController discordAudioController) {
-        super(discordAudioController);
+    public PlayerQueryCommandHandler(DiscordPlayerController discordPlayerController) {
+        super(discordPlayerController);
     }
 
     /**

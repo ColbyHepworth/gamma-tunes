@@ -1,9 +1,10 @@
 package com.gammatunes.backend.presentation.bot.interaction.command.player;
 
 import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
-import com.gammatunes.backend.presentation.bot.player.controller.DiscordAudioController;
-
+import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 import com.gammatunes.backend.presentation.bot.interaction.command.PlayerQueryCommandHandler;
+import com.gammatunes.backend.presentation.bot.player.view.dto.PlayerOutcomeResult;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -19,8 +20,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class PlayCommandHandler extends PlayerQueryCommandHandler {
 
-    public PlayCommandHandler(DiscordAudioController discordAudioController) {
-        super(discordAudioController);
+    public PlayCommandHandler(DiscordPlayerController discordPlayerController) {
+        super(discordPlayerController);
     }
 
     @Override
@@ -30,14 +31,9 @@ public class PlayCommandHandler extends PlayerQueryCommandHandler {
     }
 
     @Override
-    protected void handle(Member member, SlashCommandInteractionEvent event) throws TrackLoadException {
+    protected PlayerOutcomeResult handle(Member member, SlashCommandInteractionEvent event) throws TrackLoadException {
         String query = getQuery(event);
-        discordAudioController.play(member, query);
-    }
-
-    @Override
-    protected String getSuccessMessage() {
-        return "🎶 Added to queue!";
+        return new PlayerOutcomeResult(discordPlayerController.play(member, query), query);
     }
 }
 

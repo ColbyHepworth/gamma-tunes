@@ -1,10 +1,12 @@
 package com.gammatunes.backend.presentation.bot.player.controller;
 
 import com.gammatunes.backend.application.port.in.AudioControlUseCase;
+import com.gammatunes.backend.domain.model.PlayerOutcome;
 import com.gammatunes.backend.domain.model.VoiceConnectRequest;
 import com.gammatunes.backend.domain.model.VoiceDisconnectRequest;
 import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
 import com.gammatunes.backend.presentation.bot.exception.MemberNotInVoiceChannelException;
+import com.gammatunes.backend.presentation.bot.player.service.PlayerMessageService;
 import com.gammatunes.backend.presentation.bot.voice.DiscordVoiceGateway;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
@@ -23,12 +25,13 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public class DiscordAudioController {
+public class DiscordPlayerController {
 
-    private static final Logger logger = LoggerFactory.getLogger(DiscordAudioController.class);
+    private static final Logger logger = LoggerFactory.getLogger(DiscordPlayerController.class);
 
     private final AudioControlUseCase player;
     private final DiscordVoiceGateway discordVoiceGateway;
+    private final PlayerMessageService playerMessageService;
 
     /**
      * Plays a track in the voice channel of the specified member.
@@ -39,13 +42,12 @@ public class DiscordAudioController {
      * @throws TrackLoadException if there is an error loading the track.
      * @throws MemberNotInVoiceChannelException if the member is not in a voice channel.
      */
-    public void play(Member member, String query) throws TrackLoadException, MemberNotInVoiceChannelException {
+    public PlayerOutcome play(Member member, String query) throws TrackLoadException, MemberNotInVoiceChannelException {
         logger.debug("Attempting to play track '{}' for member '{}'", query, member.getEffectiveName());
         AudioChannel channel = getAudioChannel(member);
         discordVoiceGateway.connect(new VoiceConnectRequest(member.getGuild().getId(), channel.getId()));
-        player.play(member.getGuild().getId(), query);
+        return player.play(member.getGuild().getId(), query);
     }
-
 
     /**
      * Plays a track immediately in the voice channel of the specified member.
@@ -55,11 +57,11 @@ public class DiscordAudioController {
      * @param query  The track URL or search term to play immediately.
      * @throws MemberNotInVoiceChannelException if the member is not in a voice channel.
      */
-    public void playNow(Member member, String query) throws TrackLoadException, MemberNotInVoiceChannelException {
+    public PlayerOutcome playNow(Member member, String query) throws TrackLoadException, MemberNotInVoiceChannelException {
         logger.debug("Attempting to play track '{}' immediately for member '{}'", query, member.getEffectiveName());
         AudioChannel channel = getAudioChannel(member);
         discordVoiceGateway.connect(new VoiceConnectRequest(member.getGuild().getId(), channel.getId()));
-        player.playNow(member.getGuild().getId(), query);
+        return player.playNow(member.getGuild().getId(), query);
     }
 
     /**
@@ -67,9 +69,9 @@ public class DiscordAudioController {
      * @param member The member whose voice channel to pause playback in.
      * @throws MemberNotInVoiceChannelException if the member is not in a voice channel.
      */
-    public void pause(Member member) throws MemberNotInVoiceChannelException {
+    public PlayerOutcome pause(Member member) throws MemberNotInVoiceChannelException {
         logger.debug("Attempting to pause playback for member '{}'", member.getEffectiveName());
-        player.pause(member.getGuild().getId());
+        return player.pause(member.getGuild().getId());
     }
 
     /**
@@ -79,10 +81,12 @@ public class DiscordAudioController {
      * @param member The member whose audio player to stop.
      * @throws MemberNotInVoiceChannelException if the member is not in a voice channel.
      */
-    public void stop(Member member) throws MemberNotInVoiceChannelException {
+    public PlayerOutcome stop(Member member) throws MemberNotInVoiceChannelException {
         logger.debug("Attempting to stop playback for member '{}'", member.getEffectiveName());
         player.stop(member.getGuild().getId());
+        playerMessageService.manuallyClearPlayer(member.getGuild().getId());
         discordVoiceGateway.disconnect(new VoiceDisconnectRequest(member.getGuild().getId()));
+        return PlayerOutcome.STOPPED;
     }
 
     /**
@@ -92,9 +96,9 @@ public class DiscordAudioController {
      * @param member The member whose voice channel to resume playback in.
      * @throws MemberNotInVoiceChannelException if the member is not in a voice channel.
      */
-    public void resume(Member member) throws MemberNotInVoiceChannelException {
+    public PlayerOutcome resume(Member member) throws MemberNotInVoiceChannelException {
         logger.debug("Attempting to resume playback for member '{}'", member.getEffectiveName());
-        player.resume(member.getGuild().getId());
+        return player.resume(member.getGuild().getId());
     }
 
     /**
@@ -102,12 +106,11 @@ public class DiscordAudioController {
      * If the member is not in a voice channel, it throws an exception.
      *
      * @param member The member whose voice channel to skip the track in.
-     * @throws TrackLoadException if there is an error skipping the track.
      * @throws MemberNotInVoiceChannelException if the member is not in a voice channel.
      */
-    public void skip(Member member) throws MemberNotInVoiceChannelException {
+    public PlayerOutcome skip(Member member) throws MemberNotInVoiceChannelException {
         logger.debug("Attempting to skip track for member '{}'", member.getEffectiveName());
-        player.skip(member.getGuild().getId());
+        return player.skip(member.getGuild().getId());
     }
 
     /**
@@ -117,9 +120,9 @@ public class DiscordAudioController {
      * @param member The member whose voice channel to go back in.
      * @throws MemberNotInVoiceChannelException if the member is not in a voice channel.
      */
-    public void previous(Member member) throws MemberNotInVoiceChannelException {
+    public PlayerOutcome previous(Member member) throws MemberNotInVoiceChannelException {
         logger.debug("Attempting to go back to previous track for member '{}'", member.getEffectiveName());
-        player.previous(member.getGuild().getId());
+        return player.previous(member.getGuild().getId());
     }
 
     private AudioChannel getAudioChannel(Member member) throws MemberNotInVoiceChannelException {

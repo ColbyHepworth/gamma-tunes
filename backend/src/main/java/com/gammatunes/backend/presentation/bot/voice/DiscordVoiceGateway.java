@@ -10,16 +10,20 @@ import com.gammatunes.backend.infrastructure.lavalink.LavalinkPlaybackAdapter;
 import com.gammatunes.backend.presentation.bot.audio.AudioPlayerSendHandler;
 import com.gammatunes.backend.presentation.bot.exception.GuildNotFoundException;
 import com.gammatunes.backend.presentation.bot.exception.VoiceChannelNotFoundException;
+import com.gammatunes.backend.presentation.bot.player.service.PlayerMessageService;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.managers.AudioManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import java.util.Objects;
 
 /**
  * Service for managing voice connections in Discord.
@@ -33,6 +37,7 @@ public class DiscordVoiceGateway implements VoiceGateway {
 
     private final JDA jda;
     private final PlayerRegistryPort playerRegistry;
+    private final PlayerMessageService messageService;
 
     /**
      * Connects the bot to the voice channel of the specified member.
@@ -70,6 +75,9 @@ public class DiscordVoiceGateway implements VoiceGateway {
 
         audioManager.openAudioConnection(channel);
         logger.info("Joined voice channel {} in guild {}", channel.getName(), guild.getId());
+        TextChannel textChannel = Objects.requireNonNull(guild.getDefaultChannel())           // or pick a “music” channel
+            .asTextChannel();
+        messageService.create(req.guildId(), textChannel);
     }
 
 

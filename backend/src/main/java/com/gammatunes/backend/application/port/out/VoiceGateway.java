@@ -1,9 +1,7 @@
 package com.gammatunes.backend.application.port.out;
 
-import com.gammatunes.backend.domain.model.Session;
 import com.gammatunes.backend.domain.model.VoiceConnectRequest;
 import com.gammatunes.backend.domain.model.VoiceDisconnectRequest;
-import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
 import com.gammatunes.backend.presentation.bot.exception.MemberNotInVoiceChannelException;
 
 public interface VoiceGateway {

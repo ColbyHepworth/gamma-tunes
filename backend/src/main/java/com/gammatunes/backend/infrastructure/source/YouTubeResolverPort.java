@@ -72,6 +72,9 @@ public class YouTubeResolverPort implements TrackResolverPort {
         try {
             // Wait for the result, with a timeout.
             AudioTrack loadedTrack = future.get(10, TimeUnit.SECONDS);
+            String videoId = loadedTrack.getInfo().identifier;
+            String thumb   = deriveYoutubeThumb(videoId, loadedTrack.getInfo().uri);
+
             // Convert lavaplayer's AudioTrack into our own Track model.
             return new Track(
                 loadedTrack.getInfo().uri, // Using the URI as the identifier for re-loading
@@ -79,7 +82,7 @@ public class YouTubeResolverPort implements TrackResolverPort {
                 loadedTrack.getInfo().author,
                 Duration.ofMillis(loadedTrack.getDuration()),
                 loadedTrack.getInfo().uri,
-                null
+                thumb
             );
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             if (e.getCause() instanceof TrackLoadException) {
@@ -87,5 +90,14 @@ public class YouTubeResolverPort implements TrackResolverPort {
             }
             throw new TrackLoadException("Could not resolve track in time: " + e.getMessage(), e);
         }
+    }
+
+    private String deriveYoutubeThumb(String id, String uri) {
+        if (id == null) return null;
+        // Quick heuristic: accept only if the URI is from youtube or youtu.be
+        if (uri.contains("youtube.com") || uri.contains("youtu.be")) {
+            return "https://img.youtube.com/vi/" + id + "/hqdefault.jpg";
+        }
+        return null;
     }
 }

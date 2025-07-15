@@ -1,9 +1,11 @@
 package com.gammatunes.backend.presentation.bot.interaction.command.player;
 
 import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
-import com.gammatunes.backend.presentation.bot.player.controller.DiscordAudioController;
+import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 import com.gammatunes.backend.presentation.bot.exception.MemberNotInVoiceChannelException;
 import com.gammatunes.backend.presentation.bot.interaction.command.PlayerQueryCommandHandler;
+import com.gammatunes.backend.presentation.bot.player.view.dto.PlayerOutcomeResult;
+
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -16,8 +18,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class PlayNowCommandHandler extends PlayerQueryCommandHandler {
 
-    public PlayNowCommandHandler(DiscordAudioController discordAudioController) {
-        super(discordAudioController);
+    public PlayNowCommandHandler(DiscordPlayerController discordPlayerController) {
+        super(discordPlayerController);
     }
 
     @Override
@@ -27,13 +29,8 @@ public class PlayNowCommandHandler extends PlayerQueryCommandHandler {
     }
 
     @Override
-    protected void handle(Member member, SlashCommandInteractionEvent event) throws TrackLoadException, MemberNotInVoiceChannelException {
+    protected PlayerOutcomeResult handle(Member member, SlashCommandInteractionEvent event) throws TrackLoadException, MemberNotInVoiceChannelException {
         String query = getQuery(event);
-        discordAudioController.playNow(member, query);
-    }
-
-    @Override
-    protected String getSuccessMessage() {
-        return "🎶 Now playing immediately!";
+        return new PlayerOutcomeResult (discordPlayerController.playNow(member, query), query);
     }
 }

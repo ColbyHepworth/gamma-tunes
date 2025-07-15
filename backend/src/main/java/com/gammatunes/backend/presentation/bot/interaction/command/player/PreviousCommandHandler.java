@@ -1,8 +1,9 @@
 package com.gammatunes.backend.presentation.bot.interaction.command.player;
 
-import com.gammatunes.backend.presentation.bot.player.controller.DiscordAudioController;
+import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 import com.gammatunes.backend.presentation.bot.exception.MemberNotInVoiceChannelException;
 import com.gammatunes.backend.presentation.bot.interaction.command.PlayerCommandHandler;
+import com.gammatunes.backend.presentation.bot.player.view.dto.PlayerOutcomeResult;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -16,26 +17,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class PreviousCommandHandler extends PlayerCommandHandler {
 
-    public PreviousCommandHandler(DiscordAudioController discordAudioController) {
-        super(discordAudioController);
+    public PreviousCommandHandler(DiscordPlayerController discordPlayerController) {
+        super(discordPlayerController);
     }
 
 
     @Override
-    protected void handle(Member member, SlashCommandInteractionEvent event) throws MemberNotInVoiceChannelException {
-        /*
-         TODO: Implement the message handling logic
-                event.getHook().sendMessage("⏮️ Skipped to previous track: " + skippedTrack.get().title()).queue();
-                event.getHook().sendMessage("❌ No previous track available.").queue();
-        */
-        discordAudioController.previous(member);
-    }
+    protected PlayerOutcomeResult handle(Member member, SlashCommandInteractionEvent event) throws MemberNotInVoiceChannelException {
 
-    @Override
-    protected String getSuccessMessage() {
-        return "⏮️ Skipped to previous track.";
+        return new PlayerOutcomeResult(discordPlayerController.previous(member), null);
     }
-
 
     @Override
     public CommandData getCommandData() {
