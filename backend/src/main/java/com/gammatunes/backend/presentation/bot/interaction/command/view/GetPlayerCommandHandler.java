@@ -1,8 +1,7 @@
 package com.gammatunes.backend.presentation.bot.interaction.command.view;
 
 
-import com.gammatunes.backend.domain.model.Session;
-import com.gammatunes.backend.presentation.bot.interaction.command.SimpleCommandHandler;
+import com.gammatunes.backend.presentation.bot.interaction.command.BotCommand;
 import com.gammatunes.backend.presentation.bot.player.service.PlayerMessageService;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -17,7 +16,7 @@ import java.util.Objects;
  * A command to create the persistent player message.
  */
 @Component
-public class GetPlayerCommandHandler implements SimpleCommandHandler {
+public class GetPlayerCommandHandler implements BotCommand {
 
     private final PlayerMessageService messageManager;
 

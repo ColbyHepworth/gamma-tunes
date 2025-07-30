@@ -6,7 +6,6 @@ import com.gammatunes.backend.domain.model.Session;
 import com.gammatunes.backend.domain.model.Track;
 import com.gammatunes.backend.domain.player.AudioPlayer;
 import com.gammatunes.backend.domain.player.TrackScheduler;
-import com.gammatunes.backend.domain.player.event.PlayerStateChanged;
 import com.gammatunes.backend.infrastructure.lavalink.event.LavalinkEventHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -16,7 +15,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,23 +37,20 @@ public class LavalinkPlaybackAdapter implements AudioPlayer {
     private final TrackScheduler scheduler = new TrackScheduler();
     private final AtomicReference<PlayerState> state = new AtomicReference<>(PlayerState.STOPPED);
 
-    private final ApplicationEventPublisher events;
 
     public LavalinkPlaybackAdapter(Session session,
                                    com.sedmelluq.discord.lavaplayer.player.AudioPlayer lavaPlayer,
-                                   AudioPlayerManager playerManager, ApplicationEventPublisher events) {
+                                   AudioPlayerManager playerManager) {
         this.session       = session;
         this.lavaPlayer    = lavaPlayer;
         this.playerManager = playerManager;
         this.lavaPlayer.addListener(new LavalinkEventHandler(this));
-        this.events = events;
     }
 
 
     @Override
     public PlayerOutcome play(Track track) {
         scheduler.enqueue(track);
-        fireChange();
 
         // Start only if the player is stopped or finished loading – NOT when paused.
         if (state.get() == PlayerState.STOPPED
@@ -72,7 +67,6 @@ public class LavalinkPlaybackAdapter implements AudioPlayer {
     @Override
     public PlayerOutcome playNow(Track track) {
         scheduler.addNext(track);
-        fireChange();
         return skip();
     }
 
@@ -97,9 +91,7 @@ public class LavalinkPlaybackAdapter implements AudioPlayer {
 
         // pop the queue head and start it; we resume if we were playing before
         scheduler.next();
-        playTrack(next.get(), /*resumeAfterLoad=*/true);
-        fireChange();
-
+        playTrack(next.get());
         return PlayerOutcome.SKIPPED;
     }
 
@@ -124,8 +116,7 @@ public class LavalinkPlaybackAdapter implements AudioPlayer {
         state.set(PlayerState.LOADING);
 
         scheduler.previous();
-        playTrack(prev.get(), /*resumeAfterLoad=*/true);
-        fireChange();
+        playTrack(prev.get());
         return PlayerOutcome.PLAYING_PREVIOUS;
     }
 
@@ -136,7 +127,6 @@ public class LavalinkPlaybackAdapter implements AudioPlayer {
             return PlayerOutcome.ALREADY_PAUSED;
         }
         changeState(PlayerState.PLAYING, PlayerState.PAUSED, /*pause=*/true);
-        fireChange();
         return PlayerOutcome.PAUSED;
     }
 
@@ -146,7 +136,6 @@ public class LavalinkPlaybackAdapter implements AudioPlayer {
             return PlayerOutcome.ALREADY_PLAYING;
         }
         changeState(PlayerState.PAUSED, PlayerState.PLAYING, /*pause=*/false);
-        fireChange();
         return PlayerOutcome.RESUMED;
     }
 
@@ -157,7 +146,6 @@ public class LavalinkPlaybackAdapter implements AudioPlayer {
         }
         scheduler.clearAll();
         onQueueEnd();
-        fireChange();
         return PlayerOutcome.STOPPED;
     }
 
@@ -192,7 +180,7 @@ public class LavalinkPlaybackAdapter implements AudioPlayer {
         return session;
     }
 
-    private void playTrack(Track track, boolean resumeAfterLoad) {
+    private void playTrack(Track track) {
         state.set(PlayerState.LOADING);
         playerManager.loadItem(track.identifier(), new AudioLoadResultHandler() {
 
@@ -202,15 +190,8 @@ public class LavalinkPlaybackAdapter implements AudioPlayer {
                 log.info("[{}] ▶ {}", session.id(), loaded.getInfo().title);
 
                 lavaPlayer.playTrack(loaded);
-
-                if (resumeAfterLoad) {
-                    lavaPlayer.setPaused(false);
-                    state.set(PlayerState.PLAYING);
-                } else {
-                    lavaPlayer.setPaused(true);
-                    state.set(PlayerState.PAUSED);
-                }
-                fireChange();
+                lavaPlayer.setPaused(true);
+                state.set(PlayerState.PAUSED);
             }
 
             @Override
@@ -233,13 +214,14 @@ public class LavalinkPlaybackAdapter implements AudioPlayer {
             private void start(AudioTrack at) {
                 state.set(PlayerState.PLAYING);
                 lavaPlayer.playTrack(at);
-                fireChange();
             }
         });
     }
 
     public void onTrackEnd() {
-        skip();
+        if (state.get() != PlayerState.LOADING) {   // already skipping?
+            skip();
+        }
     }
 
     private void onQueueEnd() {
@@ -252,9 +234,5 @@ public class LavalinkPlaybackAdapter implements AudioPlayer {
         if (state.compareAndSet(from, to)) {
             lavaPlayer.setPaused(pause);
         }
-    }
-
-    private void fireChange() {
-        events.publishEvent(new PlayerStateChanged(session.id()));
     }
 }

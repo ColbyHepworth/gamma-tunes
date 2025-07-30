@@ -1,10 +1,8 @@
 package com.gammatunes.backend.presentation.bot.interaction.command.player;
 
 import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
+import com.gammatunes.backend.presentation.bot.interaction.command.QueryCommand;
 import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
-import com.gammatunes.backend.presentation.bot.interaction.command.PlayerQueryCommandHandler;
-import com.gammatunes.backend.presentation.bot.player.view.dto.PlayerOutcomeResult;
-
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -18,9 +16,9 @@ import org.springframework.stereotype.Component;
  * This command interacts with the audio service to handle track loading and playback.
  */
 @Component
-public class PlayCommandHandler extends PlayerQueryCommandHandler {
+public class PlayCommand extends PlayerCommand implements QueryCommand {
 
-    public PlayCommandHandler(DiscordPlayerController discordPlayerController) {
+    public PlayCommand(DiscordPlayerController discordPlayerController) {
         super(discordPlayerController);
     }
 
@@ -31,9 +29,9 @@ public class PlayCommandHandler extends PlayerQueryCommandHandler {
     }
 
     @Override
-    protected PlayerOutcomeResult handle(Member member, SlashCommandInteractionEvent event) throws TrackLoadException {
+    protected void handle(Member member, SlashCommandInteractionEvent event) throws TrackLoadException {
         String query = getQuery(event);
-        return new PlayerOutcomeResult(discordPlayerController.play(member, query), query);
+        discordPlayerController.play(member, query);
     }
 }
 

@@ -73,7 +73,7 @@ public class PlayerMessageService {
 
     @EventListener
     public void onPlayerStateChanged(PlayerStateChanged ev) {
-        refresh(new Session(ev.getGuildId()));
+        refresh(new Session(ev.sessionId()));
     }
 
     @Scheduled(fixedRate = 1000)
@@ -116,10 +116,11 @@ public class PlayerMessageService {
             return;
         }
 
-        AudioPlayer player = registry.getOrCreatePlayer(session);
-        // MODIFICATION: Reverted to .get() for "sticky" status messages.
-        // The status is now fetched but not removed from the map.
-        String currentStatus = lastStatus.get(session.id());
+        // Retrieve the message first to ensure it exists before trying to edit it.
+        ch.retrieveMessageById(ref.messageId()).queue(message -> {
+            // Message exists, proceed with update.
+            AudioPlayer player = registry.getOrCreatePlayer(session);
+            String currentStatus = lastStatus.get(session.id());
 
         ch.editMessageEmbedsById(
                 ref.messageId(),
@@ -131,6 +132,11 @@ public class PlayerMessageService {
                 log.warn("Failed to update embed {}; removing from cache.", ref.messageId(), err);
                 messages.remove(ref.guildId());
             });
+    }, err -> {
+            // Message does not exist, remove from cache.
+            log.warn("Message {} in channel {} not found; removing from cache.", ref.messageId(), ref.channelId());
+            messages.remove(ref.guildId());
+        });
     }
 
     /**
@@ -143,19 +149,6 @@ public class PlayerMessageService {
         delete(guildId);
     }
 
-    public void purgeBotMessages(TextChannel channel) {
-        // This is not used for player cleanup but kept for other potential uses.
-        long selfId = jda.getSelfUser().getIdLong();
-        messages.remove(channel.getGuild().getId());
-        channel.getIterableHistory()
-            .cache(false)
-            .forEachAsync(msg -> {
-                if (msg.getAuthor().getIdLong() == selfId) {
-                    channel.deleteMessageById(msg.getId()).queue();
-                }
-                return true;
-            });
-    }
 
     @PreDestroy
     void shutdown() {

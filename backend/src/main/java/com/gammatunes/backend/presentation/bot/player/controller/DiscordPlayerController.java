@@ -125,6 +125,14 @@ public class DiscordPlayerController {
         return player.previous(member.getGuild().getId());
     }
 
+    /**
+     * Retrieves the audio channel of the specified member.
+     * If the member is not in a voice channel, it throws an exception.
+     *
+     * @param member The member whose voice channel to retrieve.
+     * @return The audio channel of the member.
+     * @throws MemberNotInVoiceChannelException if the member is not in a voice channel.
+     */
     private AudioChannel getAudioChannel(Member member) throws MemberNotInVoiceChannelException {
         logger.debug("Checking voice channel for member '{}'", member.getEffectiveName());
         GuildVoiceState memberVoiceState = member.getVoiceState();

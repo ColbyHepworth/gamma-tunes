@@ -1,9 +1,8 @@
 package com.gammatunes.backend.presentation.bot.interaction.button.player;
 
 import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
-import com.gammatunes.backend.presentation.bot.interaction.button.ButtonHandler;
+import com.gammatunes.backend.presentation.bot.interaction.button.Button;
 
-import com.gammatunes.backend.presentation.bot.player.view.dto.PlayerOutcomeResult;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -11,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class PreviousButtonHandler implements ButtonHandler {
+public class PreviousButton implements Button {
 
     private final DiscordPlayerController discordPlayerController;
 
@@ -21,7 +20,7 @@ public class PreviousButtonHandler implements ButtonHandler {
     }
 
     @Override
-    public PlayerOutcomeResult handle(ButtonInteractionEvent event, Member member) {
-        return new PlayerOutcomeResult(discordPlayerController.previous(member), null);
+    public void handle(ButtonInteractionEvent event, Member member) {
+        discordPlayerController.previous(member);
     }
 }

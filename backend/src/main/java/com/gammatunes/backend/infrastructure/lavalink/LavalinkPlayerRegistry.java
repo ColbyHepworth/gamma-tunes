@@ -6,7 +6,6 @@ import com.gammatunes.backend.domain.player.AudioPlayer;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 
@@ -27,8 +26,6 @@ public class LavalinkPlayerRegistry implements PlayerRegistryPort {
 
     private final Map<String, AudioPlayer> players = new ConcurrentHashMap<>();
     private final AudioPlayerManager lavaManager;
-    private final ApplicationEventPublisher eventPublisher;
-
 
     /**
      * Retrieves or creates a new AudioPlayer for the given session.
@@ -46,8 +43,7 @@ public class LavalinkPlayerRegistry implements PlayerRegistryPort {
             return new LavalinkPlaybackAdapter(
                 session,
                 lava,
-                lavaManager,
-                eventPublisher
+                lavaManager
             );
         });
     }

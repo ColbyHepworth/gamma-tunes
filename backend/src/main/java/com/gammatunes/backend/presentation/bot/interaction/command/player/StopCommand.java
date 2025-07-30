@@ -3,9 +3,6 @@ package com.gammatunes.backend.presentation.bot.interaction.command.player;
 import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
 import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 import com.gammatunes.backend.presentation.bot.exception.MemberNotInVoiceChannelException;
-import com.gammatunes.backend.presentation.bot.interaction.command.PlayerCommandHandler;
-import com.gammatunes.backend.presentation.bot.player.service.PlayerMessageService;
-import com.gammatunes.backend.presentation.bot.player.view.dto.PlayerOutcomeResult;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -18,9 +15,9 @@ import org.springframework.stereotype.Component;
  * This command interacts with the audio service to manage playback and connection state.
  */
 @Component
-public class StopCommandHandler extends PlayerCommandHandler {
+public class StopCommand extends PlayerCommand {
 
-    public StopCommandHandler(DiscordPlayerController discordPlayerController) {
+    public StopCommand(DiscordPlayerController discordPlayerController) {
         super(discordPlayerController);
     }
 
@@ -29,9 +26,8 @@ public class StopCommandHandler extends PlayerCommandHandler {
         return Commands.slash("stop", "Stops the player, clears the queue, and disconnects the bot.");
     }
 
-
     @Override
-    protected PlayerOutcomeResult handle(Member member, SlashCommandInteractionEvent event) throws TrackLoadException, MemberNotInVoiceChannelException {
-        return new PlayerOutcomeResult(discordPlayerController.stop(member), null);
+    protected void handle(Member member, SlashCommandInteractionEvent event) throws TrackLoadException, MemberNotInVoiceChannelException {
+        discordPlayerController.stop(member);
     }
 }

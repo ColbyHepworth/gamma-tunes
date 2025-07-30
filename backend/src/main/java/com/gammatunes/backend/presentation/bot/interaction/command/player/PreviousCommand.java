@@ -1,9 +1,6 @@
 package com.gammatunes.backend.presentation.bot.interaction.command.player;
 
 import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
-import com.gammatunes.backend.presentation.bot.exception.MemberNotInVoiceChannelException;
-import com.gammatunes.backend.presentation.bot.interaction.command.PlayerCommandHandler;
-import com.gammatunes.backend.presentation.bot.player.view.dto.PlayerOutcomeResult;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -15,17 +12,21 @@ import org.springframework.stereotype.Component;
  * This command interacts with the DiscordAudioController to perform the action.
  */
 @Component
-public class PreviousCommandHandler extends PlayerCommandHandler {
+public class PreviousCommand extends PlayerCommand {
 
-    public PreviousCommandHandler(DiscordPlayerController discordPlayerController) {
+    public PreviousCommand(DiscordPlayerController discordPlayerController) {
         super(discordPlayerController);
     }
 
-
+    /**
+     * Contains the specific logic for the "previous" command.
+     * This is called by the template `execute` method in the parent PlayerCommand.
+     * @param member The member who initiated the command.
+     * @param event The raw JDA event.
+     */
     @Override
-    protected PlayerOutcomeResult handle(Member member, SlashCommandInteractionEvent event) throws MemberNotInVoiceChannelException {
-
-        return new PlayerOutcomeResult(discordPlayerController.previous(member), null);
+    protected void handle(Member member, SlashCommandInteractionEvent event) {
+        discordPlayerController.previous(member);
     }
 
     @Override

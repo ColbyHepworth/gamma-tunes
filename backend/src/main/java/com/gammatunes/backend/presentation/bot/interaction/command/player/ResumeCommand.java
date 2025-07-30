@@ -2,8 +2,6 @@ package com.gammatunes.backend.presentation.bot.interaction.command.player;
 
 import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 import com.gammatunes.backend.presentation.bot.exception.MemberNotInVoiceChannelException;
-import com.gammatunes.backend.presentation.bot.interaction.command.PlayerCommandHandler;
-import com.gammatunes.backend.presentation.bot.player.view.dto.PlayerOutcomeResult;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -15,10 +13,10 @@ import org.springframework.stereotype.Component;
  * This command interacts with the backend service to perform the stop operation.
  */
 @Component
-public class ResumeCommandHandler extends PlayerCommandHandler {
+public class ResumeCommand extends PlayerCommand {
 
 
-    public ResumeCommandHandler(DiscordPlayerController discordPlayerController) {
+    public ResumeCommand(DiscordPlayerController discordPlayerController) {
         super(discordPlayerController);
     }
 
@@ -29,8 +27,8 @@ public class ResumeCommandHandler extends PlayerCommandHandler {
 
 
     @Override
-    protected PlayerOutcomeResult handle(Member member, SlashCommandInteractionEvent event) throws MemberNotInVoiceChannelException {
-        return new PlayerOutcomeResult(discordPlayerController.resume(member), null);
+    protected void handle(Member member, SlashCommandInteractionEvent event) throws MemberNotInVoiceChannelException {
+        discordPlayerController.resume(member);
     }
 
 }

@@ -1,7 +1,7 @@
 package com.gammatunes.backend.presentation.bot;
 
 import com.gammatunes.backend.presentation.bot.interaction.button.ButtonInteractionHandler;
-import com.gammatunes.backend.presentation.bot.interaction.command.CommandHandler;
+import com.gammatunes.backend.presentation.bot.interaction.command.BotCommand;
 import com.gammatunes.backend.presentation.bot.interaction.command.CommandInteractionHandler;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.JDA;
@@ -60,10 +60,6 @@ public class JdaConfig {
     @EventListener(ContextRefreshedEvent.class)
     public void onApplicationEvent(ContextRefreshedEvent event) {
         JDA jda = event.getApplicationContext().getBean(JDA.class);
-        if (jda == null) {
-            log.warn("JDA bean is null, skipping event listener registration and command updates.");
-            return;
-        }
 
         ButtonInteractionHandler buttonInteractionHandler = event.getApplicationContext().getBean(ButtonInteractionHandler.class);
         jda.addEventListener(buttonInteractionHandler);
@@ -71,11 +67,11 @@ public class JdaConfig {
         CommandInteractionHandler commandInteractionHandler = event.getApplicationContext().getBean(CommandInteractionHandler.class);
         jda.addEventListener(commandInteractionHandler);
 
-        List<CommandHandler> commandHandlers = event.getApplicationContext().getBeanProvider(CommandHandler.class).stream().toList();
+        List<BotCommand> botCommands = event.getApplicationContext().getBeanProvider(BotCommand.class).stream().toList();
 
         log.info("Updating slash commands with Discord...");
         jda.updateCommands()
-            .addCommands(commandHandlers.stream().map(CommandHandler::getCommandData).collect(Collectors.toList()))
+            .addCommands(botCommands.stream().map(BotCommand::getCommandData).collect(Collectors.toList()))
             .queue(
                 success -> log.info("Successfully updated {} slash commands.", success.size()),
                 error -> log.error("Failed to update slash commands.", error)
