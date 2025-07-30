@@ -1,6 +1,7 @@
 package com.gammatunes.backend.infrastructure.lavalink;
 
 import com.gammatunes.backend.application.port.out.PlayerRegistryPort;
+import com.gammatunes.backend.application.bridge.PlayerOutcomeSpringPublisher;
 import com.gammatunes.backend.domain.model.Session;
 import com.gammatunes.backend.domain.player.AudioPlayer;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class LavalinkPlayerRegistry implements PlayerRegistryPort {
 
     private final Map<String, AudioPlayer> players = new ConcurrentHashMap<>();
     private final AudioPlayerManager lavaManager;
+    private final PlayerOutcomeSpringPublisher listener;
 
     /**
      * Retrieves or creates a new AudioPlayer for the given session.
@@ -40,10 +42,11 @@ public class LavalinkPlayerRegistry implements PlayerRegistryPort {
         return players.computeIfAbsent(session.id(), id -> {
             log.trace("Creating new Lavaplayer instance for session {}", id);
             var lava = lavaManager.createPlayer();
-            return new LavalinkPlaybackAdapter(
+            return new LavaLinkAudioPlayer(
                 session,
                 lava,
-                lavaManager
+                lavaManager,
+                listener
             );
         });
     }
@@ -57,7 +60,7 @@ public class LavalinkPlayerRegistry implements PlayerRegistryPort {
     @Override
     public void removePlayer(Session session) {
         AudioPlayer player = players.remove(session.id());
-        if (player instanceof LavalinkPlaybackAdapter adapter) {
+        if (player instanceof LavaLinkAudioPlayer adapter) {
             log.info("Removing Lavaplayer instance for session {}", session.id());
             adapter.getLavaPlayer().destroy();
         }

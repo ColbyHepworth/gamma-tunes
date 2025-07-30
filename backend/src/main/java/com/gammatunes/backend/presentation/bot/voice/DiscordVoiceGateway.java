@@ -6,7 +6,7 @@ import com.gammatunes.backend.domain.model.Session;
 import com.gammatunes.backend.domain.model.VoiceConnectRequest;
 import com.gammatunes.backend.domain.model.VoiceDisconnectRequest;
 import com.gammatunes.backend.domain.player.AudioPlayer;
-import com.gammatunes.backend.infrastructure.lavalink.LavalinkPlaybackAdapter;
+import com.gammatunes.backend.infrastructure.lavalink.LavaLinkAudioPlayer;
 import com.gammatunes.backend.presentation.bot.audio.AudioPlayerSendHandler;
 import com.gammatunes.backend.presentation.bot.exception.GuildNotFoundException;
 import com.gammatunes.backend.presentation.bot.exception.VoiceChannelNotFoundException;
@@ -48,19 +48,19 @@ public class DiscordVoiceGateway implements VoiceGateway {
      * @throws VoiceChannelNotFoundException if the specified voice channel does not exist.
      */
     @Override
-    public void connect(VoiceConnectRequest req) {
+    public void connect(VoiceConnectRequest voiceConnectRequest) {
 
-        Guild guild = getGuild(req.guildId());
+        Guild guild = getGuild(voiceConnectRequest.guildId());
         AudioManager audioManager = guild.getAudioManager();
 
         if (audioManager.isConnected()) {
-            logger.info("Already connected to voice channel in guild {}", req.guildId());
+            logger.info("Already connected to voice channel in guild {}", voiceConnectRequest.guildId());
             return;
         }
 
-        AudioChannel channel = guild.getVoiceChannelById(req.channelId());
+        AudioChannel channel = guild.getVoiceChannelById(voiceConnectRequest.channelId());
         if (channel == null) {
-            throw new VoiceChannelNotFoundException(req.channelId());
+            throw new VoiceChannelNotFoundException(voiceConnectRequest.channelId());
         }
 
         if (!guild.getSelfMember().hasPermission(channel, Permission.VOICE_CONNECT, Permission.VOICE_SPEAK)) {
@@ -69,15 +69,15 @@ public class DiscordVoiceGateway implements VoiceGateway {
                 "Need CONNECT & SPEAK in " + channel.getName());
         }
 
-        AudioPlayer domainPlayer = playerRegistry.getOrCreatePlayer(new Session(req.guildId()));
-        audioManager.setSendingHandler(new AudioPlayerSendHandler(((LavalinkPlaybackAdapter) domainPlayer).getLavaPlayer()));
+        AudioPlayer domainPlayer = playerRegistry.getOrCreatePlayer(new Session(voiceConnectRequest.guildId()));
+        audioManager.setSendingHandler(new AudioPlayerSendHandler(((LavaLinkAudioPlayer) domainPlayer).getLavaPlayer()));
 
 
         audioManager.openAudioConnection(channel);
         logger.info("Joined voice channel {} in guild {}", channel.getName(), guild.getId());
         TextChannel textChannel = Objects.requireNonNull(guild.getDefaultChannel())           // or pick a “music” channel
             .asTextChannel();
-        messageService.create(req.guildId(), textChannel);
+        messageService.create(voiceConnectRequest.guildId(), textChannel);
     }
 
 
