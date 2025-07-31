@@ -16,25 +16,21 @@ import java.util.List;
 @Component
 public class PlayerEmbedFactory {
 
-    private static final List<FieldRenderer> FIELD_RENDERERS = List.of(
-        new TrackInfoRenderer(),
-        new ProgressBarRenderer(),
-        new StatusFieldRenderer()
-    );
-    private static final ControlsRenderer CONTROLS = new ControlsRenderer();
+    private final List<FieldRenderer> fieldRenderers;
 
-    /** Build the embed from the player plus the latest status text. */
-    public MessageEmbed buildEmbed(AudioPlayer player, String statusText) {
+    public PlayerEmbedFactory(List<FieldRenderer> fieldRenderers) {
+        this.fieldRenderers = fieldRenderers;
+    }
 
-        EmbedBuilder eb = new EmbedBuilder();
-        FIELD_RENDERERS.forEach(r -> r.render(eb, player, statusText));
+    public MessageEmbed buildEmbed(AudioPlayer player, String status) {
+        var eb = new EmbedBuilder();
+        fieldRenderers.forEach(r -> r.render(eb, player, status));
         return eb.build();
     }
 
     public List<Button> buildButtons(AudioPlayer player) {
-        return CONTROLS.buildButtons(player);
+        return new ControlsRenderer().buildButtons(player);
     }
 }
-
 
 

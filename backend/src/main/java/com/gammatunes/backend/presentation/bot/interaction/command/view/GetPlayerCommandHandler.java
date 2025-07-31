@@ -2,7 +2,7 @@ package com.gammatunes.backend.presentation.bot.interaction.command.view;
 
 
 import com.gammatunes.backend.presentation.bot.interaction.command.BotCommand;
-import com.gammatunes.backend.presentation.bot.player.service.PlayerMessageService;
+import com.gammatunes.backend.presentation.bot.player.service.PlayerPanelCoordinator;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -18,10 +18,10 @@ import java.util.Objects;
 @Component
 public class GetPlayerCommandHandler implements BotCommand {
 
-    private final PlayerMessageService messageManager;
+    private final PlayerPanelCoordinator panelCoordinator;
 
-    public GetPlayerCommandHandler(PlayerMessageService messageManager) {
-        this.messageManager = messageManager;
+    public GetPlayerCommandHandler(PlayerPanelCoordinator panelCoordinator) {
+        this.panelCoordinator = panelCoordinator;
     }
 
     @Override
@@ -37,6 +37,6 @@ public class GetPlayerCommandHandler implements BotCommand {
             return;
         }
         Guild guild = Objects.requireNonNull(event.getGuild(), "Guild cannot be null");
-        messageManager.create(guild.getId(), channel);
+        panelCoordinator.createPanel(guild.getId(), channel);
     }
 }

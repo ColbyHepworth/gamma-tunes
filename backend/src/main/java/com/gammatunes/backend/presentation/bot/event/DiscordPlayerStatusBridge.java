@@ -2,8 +2,8 @@ package com.gammatunes.backend.presentation.bot.event;
 
 import com.gammatunes.backend.domain.model.PlayerOutcome;
 import com.gammatunes.backend.domain.player.event.PlayerStateChanged;
-import com.gammatunes.backend.presentation.bot.player.service.PlayerMessageService;
 import com.gammatunes.backend.domain.model.Session;
+import com.gammatunes.backend.presentation.bot.player.service.PlayerPanelCoordinator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,7 @@ import static com.gammatunes.backend.presentation.ui.UiConstants.STOP;
 @RequiredArgsConstructor
 public class DiscordPlayerStatusBridge {
 
-    private final PlayerMessageService messageService;
+    private final PlayerPanelCoordinator panelCoordinator;
 
     @EventListener
     public void on(PlayerStateChanged event) {
@@ -26,7 +26,7 @@ public class DiscordPlayerStatusBridge {
         String status = toStatusText(event.outcome());
 
         /* Tell the message service to update—or create—the embed */
-        messageService.publishStatus(
+        panelCoordinator.publishStatus(
             new Session(event.sessionId()), status);
     }
 

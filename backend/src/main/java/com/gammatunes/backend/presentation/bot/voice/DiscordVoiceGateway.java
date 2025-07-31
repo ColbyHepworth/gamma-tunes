@@ -10,7 +10,7 @@ import com.gammatunes.backend.infrastructure.lavalink.LavaLinkAudioPlayer;
 import com.gammatunes.backend.presentation.bot.audio.AudioPlayerSendHandler;
 import com.gammatunes.backend.presentation.bot.exception.GuildNotFoundException;
 import com.gammatunes.backend.presentation.bot.exception.VoiceChannelNotFoundException;
-import com.gammatunes.backend.presentation.bot.player.service.PlayerMessageService;
+import com.gammatunes.backend.presentation.bot.player.service.PlayerPanelCoordinator;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
@@ -37,7 +37,7 @@ public class DiscordVoiceGateway implements VoiceGateway {
 
     private final JDA jda;
     private final PlayerRegistryPort playerRegistry;
-    private final PlayerMessageService messageService;
+    private final PlayerPanelCoordinator panelCoordinator;
 
     /**
      * Connects the bot to the voice channel of the specified member.
@@ -77,7 +77,7 @@ public class DiscordVoiceGateway implements VoiceGateway {
         logger.info("Joined voice channel {} in guild {}", channel.getName(), guild.getId());
         TextChannel textChannel = Objects.requireNonNull(guild.getDefaultChannel())           // or pick a “music” channel
             .asTextChannel();
-        messageService.create(voiceConnectRequest.guildId(), textChannel);
+        panelCoordinator.createPanel(voiceConnectRequest.guildId(), textChannel);
     }
 
 

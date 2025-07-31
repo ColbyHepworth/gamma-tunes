@@ -6,7 +6,7 @@ import com.gammatunes.backend.domain.model.VoiceConnectRequest;
 import com.gammatunes.backend.domain.model.VoiceDisconnectRequest;
 import com.gammatunes.backend.domain.exception.TrackLoadException;
 import com.gammatunes.backend.domain.exception.MemberNotInVoiceChannelException;
-import com.gammatunes.backend.presentation.bot.player.service.PlayerMessageService;
+import com.gammatunes.backend.presentation.bot.player.service.PlayerPanelCoordinator;
 import com.gammatunes.backend.presentation.bot.voice.DiscordVoiceGateway;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
@@ -31,7 +31,7 @@ public class DiscordPlayerController {
 
     private final AudioControlUseCase player;
     private final DiscordVoiceGateway discordVoiceGateway;
-    private final PlayerMessageService playerMessageService;
+    private final PlayerPanelCoordinator panelCoordinator;
 
     /**
      * Plays a track in the voice channel of the specified member.
@@ -83,8 +83,9 @@ public class DiscordPlayerController {
      */
     public PlayerOutcome stop(Member member) throws MemberNotInVoiceChannelException {
         logger.debug("Attempting to stop playback for member '{}'", member.getEffectiveName());
-        player.stop(member.getGuild().getId());
-        playerMessageService.manuallyClearPlayer(member.getGuild().getId());
+        String guildId = member.getGuild().getId();
+        player.stop(guildId);
+        panelCoordinator.deletePanel(guildId);
         discordVoiceGateway.disconnect(new VoiceDisconnectRequest(member.getGuild().getId()));
         return PlayerOutcome.STOPPED;
     }

@@ -4,9 +4,11 @@ import com.gammatunes.backend.domain.model.PlayerState;
 import com.gammatunes.backend.domain.player.AudioPlayer;
 import com.gammatunes.backend.presentation.ui.UiConstants;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 public final class ControlsRenderer {
 
     public List<Button> buildButtons(AudioPlayer player) {

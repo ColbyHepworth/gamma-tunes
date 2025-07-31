@@ -2,9 +2,11 @@ package com.gammatunes.backend.presentation.bot.player.view.renderer;
 
 import com.gammatunes.backend.domain.player.AudioPlayer;
 import net.dv8tion.jda.api.EmbedBuilder;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
+@Component
 public final class ProgressBarRenderer implements FieldRenderer {
 
     private static final int BAR_LEN = 20;
