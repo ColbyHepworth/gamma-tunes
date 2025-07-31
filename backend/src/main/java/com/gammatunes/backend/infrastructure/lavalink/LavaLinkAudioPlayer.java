@@ -74,7 +74,7 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
     @Override
     public PlayerOutcome skip() {
         if (scheduler.peekNext().isEmpty()) {
-            gotoState(state.get(), PlayerOutcome.NO_NEXT_TRACK, false);
+            gotoState(state.get(), PlayerOutcome.NO_NEXT_TRACK, state.get() != PlayerState.PLAYING);
             return PlayerOutcome.NO_NEXT_TRACK;
         }
         return playNextInQueue();
@@ -82,16 +82,12 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
 
     @Override
     public PlayerOutcome previous() {
-        boolean wasPaused = state.get() == PlayerState.PAUSED;
         Optional<Track> prev = scheduler.peekPrevious();
         if (prev.isEmpty()) {
-            gotoState(state.get(), PlayerOutcome.NO_PREVIOUS_TRACK, false);
+            gotoState(state.get(), PlayerOutcome.NO_NEXT_TRACK, state.get() != PlayerState.PLAYING);
             return PlayerOutcome.NO_PREVIOUS_TRACK;
         }
 
-        if (wasPaused) {
-            gotoState(PlayerState.PLAYING, null, false);
-        }
 
         lavaPlayer.stopTrack();
         gotoState(PlayerState.LOADING, PlayerOutcome.PLAYING_PREVIOUS, false);
@@ -207,8 +203,12 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
     }
 
     private PlayerOutcome playNextInQueue() {
+
         Optional<Track> nextTrack = scheduler.next();
         if (nextTrack.isPresent()) {
+            lavaPlayer.stopTrack();
+            gotoState(PlayerState.LOADING, PlayerOutcome.SKIPPED, false);
+
             playTrack(nextTrack.get());
             return PlayerOutcome.SKIPPED;
         } else {
@@ -216,6 +216,4 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
             return PlayerOutcome.NO_NEXT_TRACK;
         }
     }
-
-
 }
