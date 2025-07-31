@@ -1,6 +1,6 @@
 package com.gammatunes.backend.presentation.bot.interaction.command.player;
 
-import com.gammatunes.backend.presentation.bot.exception.MemberNotInVoiceChannelException;
+import com.gammatunes.backend.domain.exception.MemberNotInVoiceChannelException;
 import com.gammatunes.backend.presentation.bot.interaction.command.BotCommand;
 import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 import net.dv8tion.jda.api.entities.Member;

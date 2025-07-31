@@ -1,8 +1,8 @@
 package com.gammatunes.backend.infrastructure.source;
 
 import com.gammatunes.backend.application.port.out.TrackResolverPort;
-import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
-import com.gammatunes.backend.infrastructure.source.exception.UnresolvableTrackException;
+import com.gammatunes.backend.domain.exception.TrackLoadException;
+import com.gammatunes.backend.domain.exception.UnresolvableTrackException;
 import com.gammatunes.backend.domain.model.Track;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;

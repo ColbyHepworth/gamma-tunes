@@ -1,4 +1,4 @@
-package com.gammatunes.backend.infrastructure.source.exception;
+package com.gammatunes.backend.domain.exception;
 
 /**
  * An exception thrown when a query fails to be resolved into a playable track

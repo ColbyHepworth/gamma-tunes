@@ -1,6 +1,6 @@
 package com.gammatunes.backend.application.port.out;
 
-import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
+import com.gammatunes.backend.domain.exception.TrackLoadException;
 import com.gammatunes.backend.domain.model.Track;
 
 /**

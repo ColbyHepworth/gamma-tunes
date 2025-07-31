@@ -1,7 +1,7 @@
 package com.gammatunes.backend.application.port.in;
 
 import com.gammatunes.backend.domain.model.PlayerOutcome;
-import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
+import com.gammatunes.backend.domain.exception.TrackLoadException;
 
 public interface AudioControlUseCase {
 

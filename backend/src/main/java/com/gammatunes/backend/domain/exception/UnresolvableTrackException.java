@@ -1,4 +1,4 @@
-package com.gammatunes.backend.infrastructure.source.exception;
+package com.gammatunes.backend.domain.exception;
 
 /**
  * A specific type of TrackLoadException thrown when a query is valid,

@@ -7,7 +7,7 @@ import com.gammatunes.backend.domain.model.PlayerOutcome;
 import com.gammatunes.backend.domain.model.Session;
 import com.gammatunes.backend.domain.model.Track;
 import com.gammatunes.backend.domain.player.AudioPlayer;
-import com.gammatunes.backend.infrastructure.source.exception.TrackLoadException;
+import com.gammatunes.backend.domain.exception.TrackLoadException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
