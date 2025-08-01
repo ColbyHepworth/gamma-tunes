@@ -3,20 +3,25 @@ package com.gammatunes.backend.presentation.bot.player.view.renderer;
 import com.gammatunes.backend.domain.model.PlayerState;
 import com.gammatunes.backend.domain.player.AudioPlayer;
 import com.gammatunes.backend.presentation.ui.UiConstants;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 
 /**
- * Renders the player controls for the audio player.
- * This component provides methods to build primary and secondary control buttons
- * for the audio player, such as play, pause, skip, and stop.
+ * Renders the interactive controls for the audio player.
+ * This includes primary and secondary buttons for controlling playback.
  */
 @Component
-@Order(3)
-public final class ControlsRenderer {
+public final class ControlsRenderer implements ComponentRenderer {
+
+    @Override
+    public List<ActionRow> render(AudioPlayer player) {
+        return List.of(
+            ActionRow.of(buildPrimaryButtons(player)),
+            ActionRow.of(buildSecondaryButtons(player))
+        );
+    }
 
     /**
      * Builds the primary buttons for the player controls.

@@ -2,11 +2,10 @@ package com.gammatunes.backend.presentation.bot.player.gateway;
 
 import com.gammatunes.backend.domain.player.AudioPlayer;
 import com.gammatunes.backend.presentation.bot.player.cache.MessageRef;
-import com.gammatunes.backend.presentation.bot.player.view.factory.PlayerEmbedFactory;
+import com.gammatunes.backend.presentation.bot.player.view.factory.PlayerPanelFactory;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -22,7 +21,7 @@ public class PlayerPanelGateway {
     private static final Logger log = LoggerFactory.getLogger(PlayerPanelGateway.class);
 
     private final JDA jda;
-    private final PlayerEmbedFactory embedFactory;
+    private final PlayerPanelFactory panelFactory;
 
     /**
      * Creates a player panel message in the specified text channel.
@@ -39,11 +38,12 @@ public class PlayerPanelGateway {
                                   AudioPlayer player,
                                   String status) {
 
-        var action = channel.sendMessageEmbeds(embedFactory.buildEmbed(player, status))
-            .addActionRow(embedFactory.buildPrimaryButtons(player))
-            .addActionRow(embedFactory.buildSecondaryButtons(player));
+        var panel = panelFactory.buildPanel(player, status);
 
-        var msg = action.complete();  // choose queue() if you prefer async
+        var msg = channel.sendMessageEmbeds(panel.embed())
+            .setComponents(panel.components())
+            .complete();
+
         log.info("Created panel {} in channel {}", msg.getId(), channel.getId());
         return new MessageRef(guildId, channel.getId(), msg.getIdLong());
     }
@@ -59,12 +59,10 @@ public class PlayerPanelGateway {
         var channel = jda.getTextChannelById(ref.channelId());
         if (channel == null) return;
 
-        channel.editMessageEmbedsById(ref.messageId(),
-                embedFactory.buildEmbed(player, status))
-            .setComponents(
-                ActionRow.of(embedFactory.buildPrimaryButtons(player)),
-                ActionRow.of(embedFactory.buildSecondaryButtons(player))
-            )
+        var panel = panelFactory.buildPanel(player, status);
+
+        channel.editMessageEmbedsById(ref.messageId(), panel.embed())
+            .setComponents(panel.components())
             .queue(null, err -> log.warn("Failed to update panel {}", ref, err));
     }
 
