@@ -2,9 +2,11 @@ package com.gammatunes.backend.presentation.bot.player.view.renderer;
 
 import com.gammatunes.backend.domain.player.AudioPlayer;
 import net.dv8tion.jda.api.EmbedBuilder;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
+@Order(2)
 public final class StatusFieldRenderer implements FieldRenderer {
 
     @Override

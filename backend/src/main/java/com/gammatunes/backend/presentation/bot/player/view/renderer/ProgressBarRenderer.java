@@ -2,6 +2,7 @@ package com.gammatunes.backend.presentation.bot.player.view.renderer;
 
 import com.gammatunes.backend.domain.player.AudioPlayer;
 import net.dv8tion.jda.api.EmbedBuilder;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -11,6 +12,7 @@ import java.time.Duration;
  * The progress bar shows the elapsed time, remaining time, and a play-head indicator.
  */
 @Component
+@Order(99)
 public final class ProgressBarRenderer implements FieldRenderer {
 
     private static final int    BAR_LEN   = 20;
