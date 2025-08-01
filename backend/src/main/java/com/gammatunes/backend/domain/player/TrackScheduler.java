@@ -108,10 +108,8 @@ public class TrackScheduler {
      */
     public Optional<Track> getCurrentTrack() {
         if (currentIndex >= 0 && currentIndex < tracks.size()) {
-            logger.debug("Current track: {}", tracks.get(currentIndex));
             return Optional.of(tracks.get(currentIndex));
         }
-        logger.debug("No current track, index is out of bounds: {}", currentIndex);
         return Optional.empty();
     }
 
@@ -121,11 +119,20 @@ public class TrackScheduler {
      */
     public List<Track> getQueue() {
         if (currentIndex + 1 >= tracks.size()) {
-            logger.debug("No upcoming tracks, current index: {}, total tracks: {}", currentIndex, tracks.size());
             return Collections.emptyList();
         }
-        logger.debug("Upcoming tracks from index {}: {}", currentIndex + 1, tracks.subList(currentIndex + 1, tracks.size()));
         return Collections.unmodifiableList(tracks.subList(currentIndex + 1, tracks.size()));
+    }
+
+    /**
+     * Gets the list of tracks that have already been played.
+     * @return An unmodifiable list of the tracks in the playback history.
+     */
+    public List<Track> getHistory() {
+        if (currentIndex <= 0) {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableList(tracks.subList(0, currentIndex));
     }
 
     /**
@@ -184,6 +191,30 @@ public class TrackScheduler {
         } catch (IndexOutOfBoundsException e) {
             logger.error("Error peeking previous track: {}", e.getMessage());
             return Optional.empty();
+        }
+    }
+
+    /**
+     * Finds the index of a track by its identifier in the full track list.
+     * @param identifier The unique identifier of the track.
+     * @return The index of the track, or -1 if not found.
+     */
+    public int findTrackIndex(String identifier) {
+        for (int i = 0; i < tracks.size(); i++) {
+            if (tracks.get(i).identifier().equals(identifier)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Directly sets the current index. This is used for jumping to a specific track.
+     * @param index The new index to set.
+     */
+    public void setCurrentIndex(int index) {
+        if (index >= -1 && index < tracks.size()) {
+            this.currentIndex = index;
         }
     }
 }

@@ -13,3 +13,8 @@ spring:
   main:
     web-application-type: reactive
     banner-mode: "off"
+logging:
+  level:
+    com:
+      gammatunes:
+        backend: DEBUG

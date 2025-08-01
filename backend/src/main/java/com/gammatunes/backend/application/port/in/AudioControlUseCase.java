@@ -64,6 +64,16 @@ public interface AudioControlUseCase {
     PlayerOutcome previous(String sessionId);
 
     /**
+     * Jumps to a specific track in the queue based on its identifier.
+     * This will start playing the specified track immediately.
+     *
+     * @param sessionId The unique identifier for the user's session.
+     * @param trackIdentifier The identifier of the track to jump to.
+     * @return The outcome of the jump operation, which includes the track that was played or an indication of stopping.
+     */
+    PlayerOutcome jumpToTrack(String sessionId, String trackIdentifier);
+
+    /**
      * Shuffles the current queue of tracks for the specified session.
      * This will randomize the order of tracks in the queue.
      * @param sessionId The unique identifier for the user's session.

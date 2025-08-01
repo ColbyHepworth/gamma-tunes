@@ -5,6 +5,7 @@ import com.gammatunes.backend.domain.player.AudioPlayer;
 import com.gammatunes.backend.presentation.ui.UiConstants;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
  * Renders the interactive controls for the audio player.
  * This includes primary and secondary buttons for controlling playback.
  */
+@Order(100)
 @Component
 public final class ControlsRenderer implements ComponentRenderer {
 

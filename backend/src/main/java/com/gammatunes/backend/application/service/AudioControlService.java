@@ -60,6 +60,11 @@ public class AudioControlService implements AudioControlUseCase {
     }
 
     @Override
+    public PlayerOutcome jumpToTrack(String sessionId, String trackIdentifier) {
+        return player(sessionId).jumpToTrack(trackIdentifier);
+    }
+
+    @Override
     public PlayerOutcome shuffle(String sessionId) {
         return player(sessionId).shuffle();
     }

@@ -127,6 +127,20 @@ public class DiscordPlayerController {
     }
 
     /**
+     * Jumps to a specific track in the voice channel of the specified member.
+     * If the member is not in a voice channel, it throws an exception.
+     *
+     * @param member The member whose voice channel to jump in.
+     * @param trackIdentifier The identifier of the track to jump to.
+     * @return The outcome of the jump operation.
+     * @throws MemberNotInVoiceChannelException if the member is not in a voice channel.
+     */
+    public PlayerOutcome jumpToTrack(Member member, String trackIdentifier) throws MemberNotInVoiceChannelException {
+        logger.debug("Attempting to jump to track '{}' for member '{}'", trackIdentifier, member.getEffectiveName());
+        return player.jumpToTrack(member.getGuild().getId(), trackIdentifier);
+    }
+
+    /**
      * Shuffles the current track queue in the voice channel of the specified member.
      * If the member is not in a voice channel, it throws an exception.
      *

@@ -89,6 +89,16 @@ public interface AudioPlayer {
      */
     PlayerOutcome shuffle();
 
+
+    /**
+     * Jumps to a specific track in the queue by its identifier.
+     * <p>This will change the current track to the specified one, if it exists in the queue.</p>
+     *
+     * @param trackIdentifier The identifier of the track to jump to.
+     * @return The outcome of the jump operation, which indicates whether the player successfully jumped to the specified track.
+     */
+    PlayerOutcome jumpToTrack(String trackIdentifier);
+
     /**
      * Enables repeat mode for the player.
      * <p>This will cause the player to repeat the currently playing track when it reaches the end.</p>
@@ -110,6 +120,14 @@ public interface AudioPlayer {
      * @return A list of tracks in the queue.
      */
     List<Track> getQueue();
+
+    /**
+     * Returns the playback history of tracks that have been played.
+     * <p>This includes all tracks that have been played in the past, in the order they were played.</p>
+     *
+     * @return A list of previously played tracks.
+     */
+    List<Track> getHistory();
 
     /**
      * Returns the currently playing track, if any.
