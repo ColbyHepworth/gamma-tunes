@@ -1,100 +1,64 @@
-# 🎵 Gamma Tunes - A Modern, Scalable Discord Music Bot
+# Gamma Tunes
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Java](https://img.shields.io/badge/Java-21-ED8B00.svg?logo=java&logoColor=white)](https://openjdk.org/projects/jdk/21/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0-6DB33F.svg?logo=spring&logoColor=white)](https://spring.io/projects/spring-boot)
+A Discord music bot built with Java and Spring Boot. Plays music from YouTube and provides basic player controls.
 
-**Gamma Tunes** is a high-performance Discord music bot built on a modern, decoupled Java backend. This project serves as a comprehensive demonstration of enterprise-level software architecture principles, including SOLID design, a robust multi-layered testing strategy, and a fully automated CI/CD pipeline using Docker and GitHub Actions.
+## Features
 
-## ✨ Core Features
+- Play music from YouTube (search or direct URLs)
+- Basic controls: pause, resume, skip, stop, previous
+- REST API for potential web frontend
+- Docker deployment
 
-- 🎶 **YouTube Integration** - Play music from YouTube via search or direct URL
-- 🎛️ **Full Player Controls** - Pause, resume, skip, stop, and previous track functionality
-- 🌐 **REST API** - Ready for future web or mobile clients
-- 🐳 **Fully Containerized** - Consistent, reliable deployments with Docker
-- 🔧 **Enterprise Architecture** - Built with SOLID principles and modern design patterns
+## Tech Stack
 
-## 🛠️ Technology Stack
+- **Backend**: Spring Boot 3 with WebFlux
+- **Discord**: JDA
+- **Audio**: Lavalink + Lavaplayer
+- **Build**: Gradle with Kotlin DSL
+- **Deployment**: Docker & Docker Compose
+- **Testing**: JUnit 5, Mockito, Testcontainers
 
-| Category | Technology |
-|----------|------------|
-| **Backend Framework** | Spring Boot 3 (Reactive with WebFlux) |
-| **Discord API** | JDA (Java Discord API) |
-| **Audio Engine** | Lavalink via the Lavaplayer Client |
-| **Build & Tooling** | Gradle (Kotlin DSL), Git LFS, pre-commit |
-| **Containerization** | Docker & Docker Compose |
-| **Testing** | JUnit 5, Mockito, Testcontainers, RestAssured |
-| **CI/CD** | GitHub Actions |
+## Architecture Notes
 
-## 🏛️ Architectural Design
+The bot is structured around a few key interfaces to keep things modular:
 
-This project was designed from the ground up to be **modular**, **scalable**, and **maintainable**, following key software engineering principles.
+- `AudioPlayer` interface abstracts away the audio backend (currently Lavalink)
+- Commands extend `PlayerCommand` for common functionality
+- Package structure follows domain boundaries rather than technical layers
 
-### Core Principles
+This makes it easier to swap out components or add new features without touching unrelated code.
 
-- **🎯 SOLID Design** - The entire application is built on SOLID principles. The Dependency Inversion Principle is central to the design, with high-level modules depending on abstractions (`AudioPlayer` interface) rather than concrete low-level implementations (`LavalinkPlayer`).
+## Testing
 
-- **📦 Package-by-Feature** - The codebase is organized by business capability (`audio`, `bot`, `web`, `common`) rather than by technical layers (`services`, `models`). This makes the system easier to navigate and reason about.
+Tests are split into two main categories:
 
-- **🔧 Composition over Inheritance** - The commandHandler structure favors composition by using helper utilities (`CommandUtil`) over a rigid, deep inheritance hierarchy. This provides maximum flexibility for creating new and unique botCommands in the future.
+- **Unit tests** (`src/test/`) - Fast tests that mock dependencies
+- **Integration tests** (`src/integrationTest/`) - Slower tests using Testcontainers for real dependencies
 
-### Design Patterns in Practice
+Run all tests with `./gradlew verifyAll`.
 
-- **🔌 Adapter Pattern** - The `LavalinkPlayer` class acts as an Adapter between our application's generic `AudioPlayer` interface and the specific API of the external lavaplayer library. This completely decouples our business logic from the audio provider, making it possible to swap out lavaplayer in the future with minimal code changes.
+## Development Setup
 
-- **📋 Template Method Pattern** - The abstract `PlayerCommand` class uses the Template Method pattern to handle boilerplate logic for simple botCommands (like permission checks and deferring replies), allowing concrete botCommands like `PauseCommand` and `SkipCommand` to be incredibly concise and focused on their specific action.
-
-- **🎯 Singleton Pattern** - Critical, stateless services like `AudioService` and `JdaManager` are managed as singletons by the Spring IoC container for efficiency and a centralized point of control.
-
-## 🧪 Testing Strategy: The Testing Pyramid
-The project employs a multi-layered testing strategy that follows the "Testing Pyramid" model to provide maximum confidence with optimal performance.
-
-**Unit Tests:** A large suite of fast-running unit tests verifies individual classes in isolation. These tests use Mockito to mock dependencies and live in the src/test directory. They are run on every commit.
-
-**Integration Tests:** More complex tests verify the interaction between different components. These tests use Testcontainers to spin up real dependencies (like a Lavalink server) in a controlled environment. They live in the src/integrationTest directory and are run on every pull request.
-
-### Test Layers
-
-- **🔬 Unit Tests** - A large suite of fast-running unit tests verifies individual classes in isolation. These tests use Mockito to mock dependencies and live in the `src/test` directory. They are run on every commit.
-
-- **🔗 Integration Tests** - More complex tests verify the interaction between different components. These tests use Testcontainers to spin up real dependencies (like a Lavalink server) in a controlled environment. They live in the `src/integrationTest` directory and are run on every pull request.
-
-
-## 🚀 Local Development & Usage
-
-### Prerequisites
-
-- 🐳 **Docker Desktop** (v20+) – Compose V2 enabled
-- 🔧 **Git & Git LFS**
-- 🟢 **Node.js LTS** & **Python 3.10+** (for developer tooling)
-- ☕ **Local JDK 21**
-
-### First-Time Setup
+You'll need:
+- Docker Desktop
+- Git with Git LFS
+- JDK 21
 
 ```bash
-# Clone the repo and navigate into it
 git clone https://github.com/colbyhepworth/gamma-tunes.git
 cd gamma-tunes
 
-# Run the developer bootstrap script
+# Set up dev environment
 ./scripts/bootstrap
 
-# Create a .env file from the example
+# Create config file
 cp .env.example .env
+# Add your Discord bot token to .env
 
-# Add your Discord Bot Token to the .env file
-```
-
-### Running the Application
-
-```bash
-# To run the entire stack (Lavalink + Backend/Bot)
+# Run everything
 docker compose up --build
-
-# To run all unit and integration tests
-./gradlew verifyAll
 ```
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT
