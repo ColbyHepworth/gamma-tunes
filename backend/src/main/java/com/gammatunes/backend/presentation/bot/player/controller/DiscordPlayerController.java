@@ -127,6 +127,30 @@ public class DiscordPlayerController {
     }
 
     /**
+     * Shuffles the current track queue in the voice channel of the specified member.
+     * If the member is not in a voice channel, it throws an exception.
+     *
+     * @param member The member whose voice channel to shuffle tracks in.
+     * @throws MemberNotInVoiceChannelException if the member is not in a voice channel.
+     */
+    public PlayerOutcome shuffle(Member member) throws MemberNotInVoiceChannelException {
+        logger.debug("Attempting to shuffle tracks for member '{}'", member.getEffectiveName());
+        return player.shuffle(member.getGuild().getId());
+    }
+
+    /**
+     * Toggles the repeat mode for the audio player in the voice channel of the specified member.
+     * If the member is not in a voice channel, it throws an exception.
+     *
+     * @param member The member whose voice channel to toggle repeat mode in.
+     * @throws MemberNotInVoiceChannelException if the member is not in a voice channel.
+     */
+    public PlayerOutcome toggleRepeat(Member member) throws MemberNotInVoiceChannelException {
+        logger.debug("Attempting to toggle repeat mode for member '{}'", member.getEffectiveName());
+        return player.toggleRepeat(member.getGuild().getId());
+    }
+
+    /**
      * Retrieves the audio channel of the specified member.
      * If the member is not in a voice channel, it throws an exception.
      *

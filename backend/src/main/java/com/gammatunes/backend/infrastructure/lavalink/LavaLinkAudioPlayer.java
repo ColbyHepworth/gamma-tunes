@@ -51,16 +51,13 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
 
     @Override
     public PlayerOutcome play(Track track) {
+        // If the player is idle, start this track immediately.
         if (state.get() == PlayerState.STOPPED || state.get() == PlayerState.PAUSED) {
             return playNow(track);
         }
 
+        // Otherwise, the player is already PLAYING or LOADING, so just queue the track.
         scheduler.enqueue(track);
-
-        if (state.get() == PlayerState.STOPPED || state.get() == PlayerState.LOADING) {
-            return skip();
-        }
-
         gotoState(state.get(), PlayerOutcome.ADDED_TO_QUEUE, false);
         return PlayerOutcome.ADDED_TO_QUEUE;
     }
@@ -69,6 +66,24 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
     public PlayerOutcome playNow(Track track) {
         scheduler.addNext(track);
         return skip();
+    }
+
+    @Override
+    public PlayerOutcome repeat() {
+        gotoState(state.get(), PlayerOutcome.REPEATED, false);
+        return PlayerOutcome.REPEATED;
+    }
+
+    @Override
+    public PlayerOutcome toggleRepeat() {
+        boolean repeatEnabled = scheduler.toggleRepeat();
+        if (repeatEnabled) {
+            gotoState(state.get(), PlayerOutcome.REPEAT_ENABLED, false);
+            return PlayerOutcome.REPEAT_ENABLED;
+        } else {
+            gotoState(state.get(), PlayerOutcome.REPEAT_DISABLED, false);
+            return PlayerOutcome.REPEAT_DISABLED;
+        }
     }
 
     @Override
@@ -84,7 +99,7 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
     public PlayerOutcome previous() {
         Optional<Track> prev = scheduler.peekPrevious();
         if (prev.isEmpty()) {
-            gotoState(state.get(), PlayerOutcome.NO_NEXT_TRACK, state.get() != PlayerState.PLAYING);
+            gotoState(state.get(), PlayerOutcome.NO_PREVIOUS_TRACK, state.get() != PlayerState.PLAYING);
             return PlayerOutcome.NO_PREVIOUS_TRACK;
         }
 
@@ -118,7 +133,6 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
             Optional<Track> lastTrack = scheduler.getCurrentTrack();
             if (lastTrack.isPresent()) {
                 playTrack(lastTrack.get());
-                gotoState(PlayerState.PLAYING, PlayerOutcome.RESUMED, false);
                 return PlayerOutcome.RESUMED;
             } else {
                 gotoState(state.get(), PlayerOutcome.QUEUE_EMPTY, false);
@@ -140,6 +154,13 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
         lavaPlayer.stopTrack();
         gotoState(PlayerState.STOPPED, PlayerOutcome.STOPPED, false);
         return PlayerOutcome.STOPPED;
+    }
+
+    @Override
+    public PlayerOutcome shuffle() {
+        scheduler.shuffle();
+        gotoState(state.get(), PlayerOutcome.SHUFFLED, false);
+        return PlayerOutcome.SHUFFLED;
     }
 
     @Override
@@ -168,6 +189,11 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
 
     @Override
     public Session getSession() { return session; }
+
+    @Override
+    public boolean isRepeatEnabled() {
+        return scheduler.isRepeatEnabled();
+    }
 
     private void playTrack(Track track) {
         gotoState(PlayerState.LOADING, null, false);

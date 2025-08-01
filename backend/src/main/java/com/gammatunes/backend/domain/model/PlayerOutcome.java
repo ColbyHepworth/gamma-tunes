@@ -9,6 +9,9 @@ public enum PlayerOutcome {
     /* ────────── play / enqueue ────────── */
     ADDED_TO_QUEUE,          // track accepted, normal queueing
     PLAYING_NOW,             // played immediately (play-now, empty queue)
+    REPEATED,                // repeated current track
+    REPEAT_ENABLED,          // repeat mode enabled
+    REPEAT_DISABLED,         // repeat mode disabled
 
     /* ────────── skip / next ──────────── */
     SKIPPED,                 // went to next track
@@ -30,6 +33,7 @@ public enum PlayerOutcome {
     QUEUE_CLEARED,           // queue emptied but current track kept
     QUEUE_EMPTY,             // queue was already empty
 
+    SHUFFLED,                // queue shuffled
     /* ────────── generic failure ──────── */
     ERROR                    // unexpected/unclassified failure
 }

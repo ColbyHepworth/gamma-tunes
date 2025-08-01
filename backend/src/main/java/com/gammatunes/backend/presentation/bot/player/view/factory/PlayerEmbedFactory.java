@@ -28,8 +28,12 @@ public class PlayerEmbedFactory {
         return eb.build();
     }
 
-    public List<Button> buildButtons(AudioPlayer player) {
-        return new ControlsRenderer().buildButtons(player);
+    public List<Button> buildPrimaryButtons(AudioPlayer player) {
+        return new ControlsRenderer().buildPrimaryButtons(player);
+    }
+
+    public List<Button> buildSecondaryButtons(AudioPlayer player) {
+        return new ControlsRenderer().buildSecondaryButtons(player);
     }
 }
 

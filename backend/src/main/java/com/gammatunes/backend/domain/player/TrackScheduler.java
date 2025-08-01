@@ -1,6 +1,7 @@
 package com.gammatunes.backend.domain.player;
 
 import com.gammatunes.backend.domain.model.Track;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,9 @@ public class TrackScheduler {
 
     private final List<Track> tracks = new ArrayList<>();
     private int currentIndex = -1;
+
+    @Getter
+    private boolean repeatEnabled = false;
 
     /**
      * Adds a new track to the end of the queue.
@@ -63,6 +67,39 @@ public class TrackScheduler {
         // We are at the beginning, can't go back further.
         logger.debug("At the beginning of the track list, cannot go to previous track.");
         return Optional.empty();
+    }
+
+    /**
+     * Shuffles the list of upcoming tracks in the queue randomly.
+     * This method does NOT affect the playback history or the currently playing track.
+     */
+    public void shuffle() {
+        // The upcoming queue is everything after the current index.
+        int upcomingTrackStartIndex = currentIndex + 1;
+
+        // Check if there's anything to shuffle.
+        if (upcomingTrackStartIndex >= tracks.size()) {
+            logger.debug("No upcoming tracks to shuffle.");
+            return;
+        }
+
+        // Get a view of the upcoming tracks.
+        List<Track> upcomingQueue = tracks.subList(upcomingTrackStartIndex, tracks.size());
+
+        logger.debug("Shuffling {} upcoming tracks.", upcomingQueue.size());
+
+        // Shuffle the sublist in place, which modifies the original list.
+        Collections.shuffle(upcomingQueue);
+    }
+
+    /**
+     * Toggles the repeat mode on or off.
+     * @return The new state of repeat mode.
+     */
+    public boolean toggleRepeat() {
+        repeatEnabled = !repeatEnabled;
+        logger.debug("Repeat mode is now {}", repeatEnabled ? "enabled" : "disabled");
+        return repeatEnabled;
     }
 
     /**

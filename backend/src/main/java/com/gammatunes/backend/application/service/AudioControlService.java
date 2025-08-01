@@ -59,6 +59,16 @@ public class AudioControlService implements AudioControlUseCase {
         return player(sessionId).previous();
     }
 
+    @Override
+    public PlayerOutcome shuffle(String sessionId) {
+        return player(sessionId).shuffle();
+    }
+
+    @Override
+    public PlayerOutcome toggleRepeat(String sessionId) {
+        return player(sessionId).toggleRepeat();
+    }
+
     private AudioPlayer player(String sessionId) {
         return playerRegistry.getOrCreatePlayer(new Session(sessionId));
     }

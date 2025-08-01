@@ -13,6 +13,8 @@ public final class UiConstants {
     public static final String PAUSE    = "⏸️";
     public static final String SKIP     = "⏭️";
     public static final String STOP     = "⏹️";
+    public static final String SHUFFLE  = "🔀";
+    public static final String REPEAT   = "🔁";
 
     private UiConstants() {}
 }

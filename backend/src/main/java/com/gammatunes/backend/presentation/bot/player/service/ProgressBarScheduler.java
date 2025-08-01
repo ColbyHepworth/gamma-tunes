@@ -1,6 +1,7 @@
 package com.gammatunes.backend.presentation.bot.player.service;
 
 import com.gammatunes.backend.application.port.out.PlayerRegistryPort;
+import com.gammatunes.backend.domain.model.PlayerState;
 import com.gammatunes.backend.domain.player.AudioPlayer;
 import com.gammatunes.backend.domain.model.Session;
 import com.gammatunes.backend.presentation.bot.player.cache.PlayerPanelCache;
@@ -22,22 +23,28 @@ public class ProgressBarScheduler {
         long now = System.currentTimeMillis();
 
         for (String guildId : cache.guildIds()) {
-
             AudioPlayer player = registry.getOrCreatePlayer(new Session(guildId));
+
+            // Do nothing if the player isn't actually playing.
+            if (player.getState() != PlayerState.PLAYING) continue;
+
             long pos = player.getTrackPosition();
             long dur = player.getCurrentlyPlaying()
                 .map(t -> t.duration().toMillis())
                 .orElse(0L);
             if (dur <= 0) continue;
 
+            // Get the previous and current visual index of the progress bar head.
+            int prevHeadIdx = cache.getBarIdx(guildId);
             int headIdx = (int) (20 * pos / dur);
 
+            // Check the time of the last edit.
             long prevEditTs = cache.getEditTs(guildId);
             long minInt     = chooseInterval(dur);
-
             boolean intervalElapsed = now - prevEditTs >= minInt;
 
-            if (intervalElapsed) {
+            // Only update if the interval has passed AND the bar has moved.
+            if (intervalElapsed && headIdx != prevHeadIdx) {
                 cache.setBarIdx(guildId, headIdx);
                 cache.setEditTs(guildId, now);
 

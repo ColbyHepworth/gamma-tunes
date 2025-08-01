@@ -62,4 +62,22 @@ public interface AudioControlUseCase {
      * @param sessionId The unique identifier for the user's session.
      */
     PlayerOutcome previous(String sessionId);
+
+    /**
+     * Shuffles the current queue of tracks for the specified session.
+     * This will randomize the order of tracks in the queue.
+     * @param sessionId The unique identifier for the user's session.
+     */
+    PlayerOutcome shuffle(String sessionId);
+
+    /**
+     * Toggles the repeat mode for the specified session.
+     * If repeat mode is enabled, the current track will be repeated after it finishes.
+     * If disabled, the player will continue to the next track in the queue.
+     *
+     * @param sessionId The unique identifier for the user's session.
+     * @return The new state of repeat mode.
+     */
+    PlayerOutcome toggleRepeat(String sessionId);
+
 }

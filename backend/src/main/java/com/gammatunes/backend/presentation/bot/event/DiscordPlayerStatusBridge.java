@@ -38,8 +38,14 @@ public class DiscordPlayerStatusBridge {
             case PLAYING_NOW -> "▶️ Playing now";
 
             /* ─── Skip / Next ─── */
+
             case SKIPPED             -> SKIP + " Skipped to next track";
             case NO_NEXT_TRACK       -> "❌ Nothing to skip – queue is empty";
+
+            /* ─── Repeat ─── */
+            case REPEATED            -> "🔁 Repeated current track";
+            case REPEAT_ENABLED      -> "🔁 Repeat mode enabled";
+            case REPEAT_DISABLED     -> "🔁 Repeat mode disabled";
 
             /* ─── Previous ─── */
             case PLAYING_PREVIOUS    -> PREVIOUS + " Playing previous track";
@@ -58,6 +64,7 @@ public class DiscordPlayerStatusBridge {
             case QUEUE_EMPTY         -> "ℹ️ Queue empty";
 
             /* ─── Fallback ─── */
+            case SHUFFLED            -> "🔀 Shuffled queue";
             case ERROR               -> "⚠️ Unexpected error – check logs!";
         };
     }

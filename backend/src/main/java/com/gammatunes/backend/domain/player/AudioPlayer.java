@@ -34,6 +34,14 @@ public interface AudioPlayer {
     PlayerOutcome playNow(Track track);
 
     /**
+     * Repeats the currently playing track.
+     * <p>This will cause the player to play the same track again when it reaches the end.</p>
+     *
+     * @return The outcome of the repeat operation, which indicates whether the player was successfully set to repeat.
+     */
+    PlayerOutcome repeat();
+
+    /**
      * Skips the currently playing track and plays the next track in the queue.
      * <p>If there are no tracks in the queue, this will stop playback.</p>
      *
@@ -74,6 +82,22 @@ public interface AudioPlayer {
     PlayerOutcome previous();
 
     /**
+     * Shuffles the current queue of tracks.
+     * <p>This will randomize the order of tracks in the queue.</p>
+     *
+     * @return The outcome of the shuffle operation, which indicates whether the queue was successfully shuffled.
+     */
+    PlayerOutcome shuffle();
+
+    /**
+     * Enables repeat mode for the player.
+     * <p>This will cause the player to repeat the currently playing track when it reaches the end.</p>
+     *
+     * @return The outcome of enabling repeat mode, which indicates whether it was successfully enabled.
+     */
+    PlayerOutcome toggleRepeat();
+
+    /**
      * Clears the entire queue of tracks.
      * <p>This does not stop the currently playing track; it only clears the queue.</p>
      */
@@ -102,6 +126,14 @@ public interface AudioPlayer {
      * @return The current PlayerState.
      */
     PlayerState getState();
+
+    /**
+     * Checks if repeat mode is enabled.
+     * <p>This indicates whether the player will repeat the currently playing track when it finishes.</p>
+     *
+     * @return True if repeat mode is enabled, false otherwise.
+     */
+    boolean isRepeatEnabled();
 
     /**
      * Returns the current position of the track being played, in milliseconds.

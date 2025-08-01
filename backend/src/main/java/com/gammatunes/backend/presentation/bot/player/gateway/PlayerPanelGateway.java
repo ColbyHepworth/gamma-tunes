@@ -6,6 +6,7 @@ import com.gammatunes.backend.presentation.bot.player.view.factory.PlayerEmbedFa
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,8 @@ public class PlayerPanelGateway {
                                   String status) {
 
         var action = channel.sendMessageEmbeds(embedFactory.buildEmbed(player, status))
-            .addActionRow(embedFactory.buildButtons(player));
+            .addActionRow(embedFactory.buildPrimaryButtons(player))
+            .addActionRow(embedFactory.buildSecondaryButtons(player));
 
         var msg = action.complete();  // choose queue() if you prefer async
         log.info("Created panel {} in channel {}", msg.getId(), channel.getId());
@@ -59,7 +61,10 @@ public class PlayerPanelGateway {
 
         channel.editMessageEmbedsById(ref.messageId(),
                 embedFactory.buildEmbed(player, status))
-            .setActionRow(embedFactory.buildButtons(player))
+            .setComponents(
+                ActionRow.of(embedFactory.buildPrimaryButtons(player)),
+                ActionRow.of(embedFactory.buildSecondaryButtons(player))
+            )
             .queue(null, err -> log.warn("Failed to update panel {}", ref, err));
     }
 

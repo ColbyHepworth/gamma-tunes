@@ -42,7 +42,7 @@ public class ButtonInteractionHandler extends ListenerAdapter {
             }
         } catch (Exception ex) {
             log.error("Error handling button '{}'", id, ex);
-            e.reply("❌ Unexpected error.").setEphemeral(true).queue();
+            e.getHook().sendMessage("❌ Unexpected error.").setEphemeral(true).queue();
         }
     }
 }
