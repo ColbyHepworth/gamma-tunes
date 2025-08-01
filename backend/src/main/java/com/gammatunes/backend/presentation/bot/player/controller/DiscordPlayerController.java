@@ -2,6 +2,7 @@ package com.gammatunes.backend.presentation.bot.player.controller;
 
 import com.gammatunes.backend.application.port.in.AudioControlUseCase;
 import com.gammatunes.backend.domain.model.PlayerOutcome;
+import com.gammatunes.backend.domain.model.Requester;
 import com.gammatunes.backend.domain.model.VoiceConnectRequest;
 import com.gammatunes.backend.domain.model.VoiceDisconnectRequest;
 import com.gammatunes.backend.domain.exception.TrackLoadException;
@@ -46,7 +47,8 @@ public class DiscordPlayerController {
         logger.debug("Attempting to play track '{}' for member '{}'", query, member.getEffectiveName());
         AudioChannel channel = getAudioChannel(member);
         discordVoiceGateway.connect(new VoiceConnectRequest(member.getGuild().getId(), channel.getId()));
-        return player.play(member.getGuild().getId(), query);
+        Requester requester = new Requester(member.getId(), member.getEffectiveName(), member.getEffectiveAvatarUrl());
+        return player.play(member.getGuild().getId(), query, requester);
     }
 
     /**
@@ -61,7 +63,8 @@ public class DiscordPlayerController {
         logger.debug("Attempting to play track '{}' immediately for member '{}'", query, member.getEffectiveName());
         AudioChannel channel = getAudioChannel(member);
         discordVoiceGateway.connect(new VoiceConnectRequest(member.getGuild().getId(), channel.getId()));
-        return player.playNow(member.getGuild().getId(), query);
+        Requester requester = new Requester(member.getId(), member.getEffectiveName(), member.getEffectiveAvatarUrl());
+        return player.playNow(member.getGuild().getId(), query, requester);
     }
 
     /**

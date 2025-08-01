@@ -1,5 +1,6 @@
 package com.gammatunes.backend.presentation.bot.interaction.button.player;
 
+import com.gammatunes.backend.domain.model.PlayerOutcome;
 import com.gammatunes.backend.presentation.bot.interaction.button.Button;
 import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ public class RepeatButton implements Button {
         return "player:repeat";
     }
 
-    public void handle(ButtonInteractionEvent event, Member member) {
-        discordPlayerController.toggleRepeat(member);
+    public PlayerOutcome handle(ButtonInteractionEvent event, Member member) {
+        return discordPlayerController.toggleRepeat(member);
     }
 }

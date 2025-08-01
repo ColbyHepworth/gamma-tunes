@@ -1,5 +1,6 @@
 package com.gammatunes.backend.presentation.bot.interaction.button;
 
+import com.gammatunes.backend.domain.model.PlayerOutcome;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.entities.Member;
 
@@ -21,8 +22,9 @@ public interface Button {
      * Handles the button interaction event.
      * This method is called when a button is clicked in the Discord bot.
      *
-     * @param event The button interaction event containing details about the interaction.
+     * @param event  The button interaction event containing details about the interaction.
      * @param member The member who clicked the button.
+     * @return A {@link PlayerOutcome} indicating the result of the button interaction.
      */
-    void handle(ButtonInteractionEvent event, Member member);
+    PlayerOutcome handle(ButtonInteractionEvent event, Member member);
 }

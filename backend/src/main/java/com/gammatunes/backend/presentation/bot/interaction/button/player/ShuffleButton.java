@@ -1,5 +1,6 @@
 package com.gammatunes.backend.presentation.bot.interaction.button.player;
 
+import com.gammatunes.backend.domain.model.PlayerOutcome;
 import com.gammatunes.backend.presentation.bot.interaction.button.Button;
 import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class ShuffleButton implements Button {
     }
 
     @Override
-    public void handle(ButtonInteractionEvent event, Member member) {
-        discordPlayerController.shuffle(member);
+    public PlayerOutcome handle(ButtonInteractionEvent event, Member member) {
+        return discordPlayerController.shuffle(member);
     }
 }

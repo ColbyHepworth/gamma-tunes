@@ -2,28 +2,30 @@ package com.gammatunes.backend.application.port.in;
 
 import com.gammatunes.backend.domain.model.PlayerOutcome;
 import com.gammatunes.backend.domain.exception.TrackLoadException;
+import com.gammatunes.backend.domain.model.Requester;
 
 public interface AudioControlUseCase {
 
     /**
      * Plays a track based on the provided session ID and query.
-     * If the track is not already loaded, it will be resolved and loaded.
+     * This method is used to queue a track for playback.
      *
      * @param sessionId The unique identifier for the user's session.
      * @param query The user's input (URL or search term) to resolve into a playable track.
      * @throws TrackLoadException if the track cannot be resolved or loaded.
      */
-    PlayerOutcome play(String sessionId, String query) throws TrackLoadException;
+    PlayerOutcome play(String sessionId, String query, Requester requester) throws TrackLoadException;
 
     /**
      * Immediately plays a track based on the provided session ID and query.
-     * This method is used to play a track without queuing it.
+     * This method is used for commands that require immediate playback, such as "play now".
      *
      * @param sessionId The unique identifier for the user's session.
      * @param query The user's input (URL or search term) to resolve into a playable track.
+     * @param requester The requester information, which may include user details.
      * @throws TrackLoadException if the track cannot be resolved or loaded.
      */
-    PlayerOutcome playNow(String sessionId, String query) throws TrackLoadException;
+    PlayerOutcome playNow(String sessionId, String query, Requester requester) throws TrackLoadException;
 
     /**
      * Pauses the audio playback for the specified session.

@@ -12,41 +12,35 @@ import java.time.Duration;
  * The progress bar shows the elapsed time, remaining time, and a play-head indicator.
  */
 @Component
-@Order(99)
+@Order(20)
 public final class ProgressBarRenderer implements FieldRenderer {
 
-    private static final int    BAR_LEN   = 20;
-    private static final String UNIT      = "▬";          // thin horizontal bar unit
-    private static final String HEAD      = "🔘";          // play‑head
-    private static final String URL       = "https://google.com"; // any stable link
+    private static final int BAR_LEN = 20;
+    private static final String UNIT = "▬";
+    private static final String HEAD = "🔘";
+    private static final String URL = "https://google.com";
 
     @Override
     public void render(EmbedBuilder eb, AudioPlayer player, String ignored) {
-        player.getCurrentlyPlaying().ifPresent(track -> {
-            String bar = build(player.getTrackPosition(), track.duration().toMillis());
-            eb.addField("Progress", bar, false);
+        player.getCurrentItem().ifPresent(item -> {
+            var track = item.track();
+
+            String bar = buildBar(player.getTrackPosition(), track.duration().toMillis());
+            String time = format(player.getTrackPosition()) + " / " + format(track.duration().toMillis());
+
+            eb.addField("\u200B", bar + "\n" + time, false);
+
         });
     }
 
-    private String build(long pos, long total) {
+    private String buildBar(long pos, long total) {
         if (total <= 0) return "🔴 Live Stream";
-
-        int headIdx = (int) (BAR_LEN * pos / total); // 0‑based index where play‑head sits
-        if (headIdx >= BAR_LEN) headIdx = BAR_LEN - 1; // safety cap on last tick
-
-        String elapsed   = UNIT.repeat(headIdx);
+        int headIdx = (int) (BAR_LEN * pos / total);
+        if (headIdx >= BAR_LEN) headIdx = BAR_LEN - 1;
+        String elapsed = UNIT.repeat(headIdx);
         String remaining = UNIT.repeat(Math.max(0, BAR_LEN - headIdx - 1));
-
-        // Wrap the elapsed part in a markdown link to turn it blue.
-        String linkedElapsed = elapsed.isEmpty() ? "" : "[" + elapsed + "]( " + URL + " )";
-
-        return linkedElapsed +
-            HEAD +
-            remaining +
-            " " +
-            format(pos) +
-            " / " +
-            format(total);
+        String linkedElapsed = elapsed.isEmpty() ? "" : "[" + elapsed + "](" + URL + ")";
+        return linkedElapsed + HEAD + remaining;
     }
 
     private static String format(long millis) {

@@ -2,8 +2,8 @@ package com.gammatunes.backend.domain.player;
 
 import com.gammatunes.backend.domain.model.PlayerOutcome;
 import com.gammatunes.backend.domain.model.PlayerState;
+import com.gammatunes.backend.domain.model.QueueItem;
 import com.gammatunes.backend.domain.model.Session;
-import com.gammatunes.backend.domain.model.Track;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,19 +19,19 @@ public interface AudioPlayer {
      * Plays a track, adding it to the queue if necessary.
      * <p>If the player is currently playing another track, this will add the new track to the queue.</p>
      *
-     * @param track The track to play.
+     * @param item The queue item to play.
      * @return The outcome of the play operation, which includes the track that was played or queued.
      */
-    PlayerOutcome play(Track track);
+    PlayerOutcome play(QueueItem item);
 
     /**
      * Immediately plays a track without queuing it.
      * <p>This is used for commands that require immediate playback, such as "play now".</p>
      *
-     * @param track The track to play immediately.
+     * @param item The queue item to play immediately.
      * @return The outcome of the play operation, which includes the track that was played.
      */
-    PlayerOutcome playNow(Track track);
+    PlayerOutcome playNow(QueueItem item);
 
     /**
      * Repeats the currently playing track.
@@ -117,25 +117,25 @@ public interface AudioPlayer {
      * Returns the current queue of tracks.
      * <p>This includes all tracks that are queued for playback, excluding the currently playing track.</p>
      *
-     * @return A list of tracks in the queue.
+     * @return A list of queue items.
      */
-    List<Track> getQueue();
+    List<QueueItem> getQueue();
 
     /**
      * Returns the playback history of tracks that have been played.
      * <p>This includes all tracks that have been played in the past, in the order they were played.</p>
      *
-     * @return A list of previously played tracks.
+     * @return A list of previously played queue items.
      */
-    List<Track> getHistory();
+    List<QueueItem> getHistory();
 
     /**
      * Returns the currently playing track, if any.
      * <p>This will return an empty Optional if no track is currently playing.</p>
      *
-     * @return An Optional containing the currently playing track, or empty if none.
+     * @return An Optional containing the currently playing queue item, or empty if none.
      */
-    Optional<Track> getCurrentlyPlaying();
+    Optional<QueueItem> getCurrentItem();
 
     /**
      * Returns the current state of the player.

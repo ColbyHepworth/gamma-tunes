@@ -1,5 +1,6 @@
 package com.gammatunes.backend.presentation.bot.interaction.button.player;
 
+import com.gammatunes.backend.domain.model.PlayerOutcome;
 import com.gammatunes.backend.presentation.bot.interaction.button.Button;
 import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 
@@ -21,7 +22,7 @@ public class SkipButton implements Button {
     }
 
     @Override
-    public void handle(ButtonInteractionEvent event, Member member) {
-        discordPlayerController.skip(member);
+    public PlayerOutcome handle(ButtonInteractionEvent event, Member member) {
+        return discordPlayerController.skip(member);
     }
 }

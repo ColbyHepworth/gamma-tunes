@@ -3,9 +3,7 @@ package com.gammatunes.backend.application.service;
 import com.gammatunes.backend.application.port.in.AudioControlUseCase;
 import com.gammatunes.backend.application.port.out.PlayerRegistryPort;
 import com.gammatunes.backend.application.port.out.TrackResolverPort;
-import com.gammatunes.backend.domain.model.PlayerOutcome;
-import com.gammatunes.backend.domain.model.Session;
-import com.gammatunes.backend.domain.model.Track;
+import com.gammatunes.backend.domain.model.*;
 import com.gammatunes.backend.domain.player.AudioPlayer;
 import com.gammatunes.backend.domain.exception.TrackLoadException;
 import lombok.RequiredArgsConstructor;
@@ -19,19 +17,25 @@ public class AudioControlService implements AudioControlUseCase {
     private final TrackResolverPort resolver;
 
     @Override
-    public PlayerOutcome play(String sessionId, String query) throws TrackLoadException {
+    public PlayerOutcome play(String sessionId, String query, Requester requester) throws TrackLoadException {
         Session session = new Session(sessionId);
         Track track = resolver.resolve(query);
         AudioPlayer player = playerRegistry.getOrCreatePlayer(session);
-        return player.play(track);
+
+        // Combine the Track and Requester into a QueueItem
+        QueueItem queueItem = new QueueItem(track, requester);
+        return player.play(queueItem);
     }
 
     @Override
-    public PlayerOutcome playNow(String sessionId, String query) throws TrackLoadException {
+    public PlayerOutcome playNow(String sessionId, String query, Requester requester) throws TrackLoadException {
         Session session = new Session(sessionId);
         Track track = resolver.resolve(query);
         AudioPlayer player = playerRegistry.getOrCreatePlayer(session);
-        return player.playNow(track);
+
+        // Combine the Track and Requester into a QueueItem
+        QueueItem queueItem = new QueueItem(track, requester);
+        return player.playNow(queueItem);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.gammatunes.backend.infrastructure.lavalink;
 
 import com.gammatunes.backend.domain.model.PlayerOutcome;
 import com.gammatunes.backend.domain.model.PlayerState;
+import com.gammatunes.backend.domain.model.QueueItem;
 import com.gammatunes.backend.domain.model.Session;
 import com.gammatunes.backend.domain.model.Track;
 import com.gammatunes.backend.domain.player.AudioPlayer;
@@ -48,24 +49,22 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
     }
 
     @Override
-    public PlayerOutcome play(Track track) {
-        // If the player is idle, start this track immediately.
+    public PlayerOutcome play(QueueItem item) {
         if (state.get() == PlayerState.STOPPED || state.get() == PlayerState.PAUSED) {
-            log.debug("[{}] Starting track: {}", session.id(), track.identifier());
-            return playNow(track);
+            log.debug("[{}] Starting track: {}", session.id(), item.track().identifier());
+            return playNow(item);
         }
 
-        // Otherwise, the player is already PLAYING or LOADING, so just queue the track.
-        log.debug("[{}] Adding track to queue: {}", session.id(), track.identifier());
-        scheduler.enqueue(track);
+        log.debug("[{}] Adding track to queue: {}", session.id(), item.track().identifier());
+        scheduler.enqueue(item);
         gotoState(state.get(), PlayerOutcome.ADDED_TO_QUEUE, false);
         return PlayerOutcome.ADDED_TO_QUEUE;
     }
 
     @Override
-    public PlayerOutcome playNow(Track track) {
-        log.debug("[{}] Starting track: {}", session.id(), track.identifier());
-        scheduler.addNext(track);
+    public PlayerOutcome playNow(QueueItem item) {
+        log.debug("[{}] Starting track now: {}", session.id(), item.track().identifier());
+        scheduler.addNext(item);
         return skip();
     }
 
@@ -79,13 +78,15 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
     @Override
     public PlayerOutcome toggleRepeat() {
         boolean repeatEnabled = scheduler.toggleRepeat();
+        boolean isCurrentlyPaused = (state.get() == PlayerState.PAUSED);
+
         if (repeatEnabled) {
             log.debug("[{}] Toggling repeat mode on", session.id());
-            gotoState(state.get(), PlayerOutcome.REPEAT_ENABLED, false);
+            gotoState(state.get(), PlayerOutcome.REPEAT_ENABLED, isCurrentlyPaused);
             return PlayerOutcome.REPEAT_ENABLED;
         } else {
             log.debug("[{}] Toggling repeat mode off", session.id());
-            gotoState(state.get(), PlayerOutcome.REPEAT_DISABLED, false);
+            gotoState(state.get(), PlayerOutcome.REPEAT_DISABLED, isCurrentlyPaused);
             return PlayerOutcome.REPEAT_DISABLED;
         }
     }
@@ -103,7 +104,7 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
 
     @Override
     public PlayerOutcome previous() {
-        Optional<Track> prev = scheduler.peekPrevious();
+        Optional<QueueItem> prev = scheduler.peekPrevious();
         if (prev.isEmpty()) {
             log.debug("[{}] No previous track to play", session.id());
             gotoState(state.get(), PlayerOutcome.NO_PREVIOUS_TRACK, state.get() != PlayerState.PLAYING);
@@ -113,8 +114,8 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
         lavaPlayer.stopTrack();
         gotoState(PlayerState.LOADING, PlayerOutcome.PLAYING_PREVIOUS, false);
         scheduler.previous();
-        log.debug("[{}] Playing previous track: {}", session.id(), prev.get().identifier());
-        playTrack(prev.get());
+        log.debug("[{}] Playing previous track: {}", session.id(), prev.get().track().identifier());
+        playTrack(prev.get().track());
         return PlayerOutcome.PLAYING_PREVIOUS;
     }
 
@@ -140,10 +141,10 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
         }
 
         if (state.get() == PlayerState.STOPPED) {
-            Optional<Track> lastTrack = scheduler.getCurrentTrack();
+            Optional<QueueItem> lastTrack = scheduler.getCurrentItem();
             if (lastTrack.isPresent()) {
-                log.debug("[{}] Resuming last track: {}", session.id(), lastTrack.get().identifier());
-                playTrack(lastTrack.get());
+                log.debug("[{}] Resuming last track: {}", session.id(), lastTrack.get().track().identifier());
+                playTrack(lastTrack.get().track());
                 return PlayerOutcome.RESUMED;
             } else {
                 log.debug("[{}] No last track to resume", session.id());
@@ -180,8 +181,6 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
             return PlayerOutcome.ERROR;
         }
 
-        // Set the scheduler's position to be just before the target track.
-        // We do this because playNextInQueue() calls next(), which increments the index first.
         scheduler.setCurrentIndex(trackIndex - 1);
         log.debug("[{}] Jumping to track: {}", session.id(), trackIdentifier);
         return playNextInQueue();
@@ -191,7 +190,8 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
     public PlayerOutcome shuffle() {
         log.debug("[{}] Shuffling", session.id());
         scheduler.shuffle();
-        gotoState(state.get(), PlayerOutcome.SHUFFLED, false);
+        boolean isCurrentlyPaused = (state.get() == PlayerState.PAUSED);
+        gotoState(state.get(), PlayerOutcome.SHUFFLED, isCurrentlyPaused);
         return PlayerOutcome.SHUFFLED;
     }
 
@@ -202,18 +202,18 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
     }
 
     @Override
-    public List<Track> getQueue() {
+    public List<QueueItem> getQueue() {
         return scheduler.getQueue();
     }
 
     @Override
-    public List<Track> getHistory() {
+    public List<QueueItem> getHistory() {
         return scheduler.getHistory();
     }
 
     @Override
-    public Optional<Track> getCurrentlyPlaying() {
-        return scheduler.getCurrentTrack();
+    public Optional<QueueItem> getCurrentItem() {
+        return scheduler.getCurrentItem();
     }
 
     @Override
@@ -243,7 +243,7 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
         gotoState(PlayerState.LOADING, null, false);
         playerManager.loadItem(track.identifier(), new AudioLoadResultHandler() {
             @Override public void trackLoaded(AudioTrack loaded) {
-            log.debug("[{}] Track loaded: {}", session.id(), loaded.getIdentifier());
+                log.debug("[{}] Track loaded: {}", session.id(), loaded.getIdentifier());
                 lavaPlayer.playTrack(loaded);
             }
             @Override public void playlistLoaded(AudioPlaylist pl) {
@@ -289,13 +289,13 @@ public class LavaLinkAudioPlayer implements AudioPlayer {
 
     private PlayerOutcome playNextInQueue() {
 
-        Optional<Track> nextTrack = scheduler.next();
+        Optional<QueueItem> nextTrack = scheduler.next();
         if (nextTrack.isPresent()) {
-            log.debug("[{}] Playing next track: {}", session.id(), nextTrack.get().identifier());
+            log.debug("[{}] Playing next track: {}", session.id(), nextTrack.get().track().identifier());
             lavaPlayer.stopTrack();
             gotoState(PlayerState.LOADING, PlayerOutcome.SKIPPED, false);
 
-            playTrack(nextTrack.get());
+            playTrack(nextTrack.get().track());
             return PlayerOutcome.SKIPPED;
         } else {
             log.debug("[{}] No next track available, queue is empty", session.id());

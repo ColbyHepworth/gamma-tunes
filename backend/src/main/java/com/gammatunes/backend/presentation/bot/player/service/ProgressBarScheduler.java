@@ -29,8 +29,8 @@ public class ProgressBarScheduler {
             if (player.getState() != PlayerState.PLAYING) continue;
 
             long pos = player.getTrackPosition();
-            long dur = player.getCurrentlyPlaying()
-                .map(t -> t.duration().toMillis())
+            long dur = player.getCurrentItem()
+                .map(item -> item.track().duration().toMillis())
                 .orElse(0L);
             if (dur <= 0) continue;
 

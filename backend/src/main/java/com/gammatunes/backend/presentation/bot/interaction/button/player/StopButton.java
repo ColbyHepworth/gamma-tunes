@@ -1,5 +1,6 @@
 package com.gammatunes.backend.presentation.bot.interaction.button.player;
 
+import com.gammatunes.backend.domain.model.PlayerOutcome;
 import com.gammatunes.backend.presentation.bot.player.controller.DiscordPlayerController;
 import com.gammatunes.backend.presentation.bot.interaction.button.Button;
 
@@ -20,7 +21,7 @@ public class StopButton implements Button {
     }
 
     @Override
-    public void handle(ButtonInteractionEvent event, Member member) {
-        discordPlayerController.stop(member);
+    public PlayerOutcome handle(ButtonInteractionEvent event, Member member) {
+        return discordPlayerController.stop(member);
     }
 }

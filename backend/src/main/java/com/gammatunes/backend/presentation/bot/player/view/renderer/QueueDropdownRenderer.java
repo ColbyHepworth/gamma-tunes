@@ -1,5 +1,6 @@
 package com.gammatunes.backend.presentation.bot.player.view.renderer;
 
+import com.gammatunes.backend.domain.model.QueueItem;
 import com.gammatunes.backend.domain.model.Track;
 import com.gammatunes.backend.domain.player.AudioPlayer;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
@@ -27,11 +28,11 @@ public final class QueueDropdownRenderer implements ComponentRenderer {
 
     @Override
     public List<ActionRow> render(AudioPlayer player) {
-        List<Track> history = new ArrayList<>(player.getHistory());
-        Optional<Track> currentTrack = player.getCurrentlyPlaying();
-        List<Track> queue = player.getQueue();
+        List<QueueItem> history = new ArrayList<>(player.getHistory());
+        Optional<QueueItem> currentItem = player.getCurrentItem();
+        List<QueueItem> queue = player.getQueue();
 
-        boolean hasContent = !history.isEmpty() || currentTrack.isPresent() || !queue.isEmpty();
+        boolean hasContent = !history.isEmpty() || currentItem.isPresent() || !queue.isEmpty();
 
         if (!hasContent) {
             return List.of(ActionRow.of(
@@ -48,35 +49,21 @@ public final class QueueDropdownRenderer implements ComponentRenderer {
 
         Collections.reverse(history);
         for (int i = 0; i < Math.min(history.size(), MAX_HISTORY_OPTIONS); i++) {
-            Track track = history.get(i);
-            menuBuilder.addOption(
-                truncate(cleanTitle(track.title()), 100),
-                track.identifier(),
-                "⏪ Recently Played"
-            );
+            Track track = history.get(i).track();
+            menuBuilder.addOption(truncate(cleanTitle(track.title()), 95), track.identifier(), "⏪ Recently Played");
         }
 
-        currentTrack.ifPresent(track -> {
-            String title = cleanTitle(track.title());
-
-            String labelWithHint = truncate(title, 95) + "  ↕️";
-
-            menuBuilder.addOption(
-                labelWithHint, // Use the new label with the hint
-                track.identifier(),
-                "▶️ Now Playing"
-            );
+        currentItem.ifPresent(item -> {
+            Track track = item.track();
+            String labelWithHint = truncate(cleanTitle(track.title()), 95) + "  ↕️";
+            menuBuilder.addOption(labelWithHint, track.identifier(), "▶️ Now Playing");
             menuBuilder.setDefaultValues(track.identifier());
         });
 
         for (int i = 0; i < Math.min(queue.size(), MAX_QUEUE_OPTIONS); i++) {
-            Track track = queue.get(i);
+            Track track = queue.get(i).track();
             String numberedTitle = String.format("%d. %s", i + 1, cleanTitle(track.title()));
-            menuBuilder.addOption(
-                truncate(numberedTitle, 100),
-                track.identifier(),
-                "⏩ Up Next"
-            );
+            menuBuilder.addOption(truncate(numberedTitle, 100), track.identifier(), "⏩ Up Next");
         }
 
         if (menuBuilder.getOptions().isEmpty()) {
@@ -96,8 +83,7 @@ public final class QueueDropdownRenderer implements ComponentRenderer {
         return text.substring(0, Math.min(text.length(), maxLength));
     }
 
-
     private String cleanTitle(String title) {
-    return title.replaceAll("(?i)\\s*\\(official.*video\\)|\\s*\\(official.*audio\\)|\\s*\\[official.*]|\\s*\\(audio\\)|\\s*\\(4k.*\\)|\\s*\\(hd\\)", "").trim();
+        return title.replaceAll("(?i)\\s*\\(official.*video\\)|\\s*\\(official.*audio\\)|\\s*\\[official.*]|\\s*\\(audio\\)|\\s*\\(4k.*\\)|\\s*\\(hd\\)", "").trim();
     }
 }
