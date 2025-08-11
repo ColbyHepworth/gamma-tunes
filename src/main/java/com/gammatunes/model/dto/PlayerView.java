@@ -45,13 +45,15 @@ public record PlayerView(
         List<TrackView> queue,
         List<TrackView> history
     ) {
-        this.guildId = guildId;
-        this.state = state;
-        this.positionMillis = positionMillis;
-        this.repeatEnabled = repeatEnabled;
-        this.volume = volume;
-        this.currentTrack = Optional.ofNullable(currentTrack);
-        this.queue = List.copyOf(queue);
-        this.history = List.copyOf(history);
+        this(
+            guildId,
+            state,
+            positionMillis,
+            repeatEnabled,
+            volume,
+            Optional.ofNullable(currentTrack),
+            List.copyOf(queue),
+            List.copyOf(history)
+        );
     }
 }
