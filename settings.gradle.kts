@@ -1,2 +1,1 @@
-
 rootProject.name = "gamma-tunes"
