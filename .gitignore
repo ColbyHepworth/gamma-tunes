@@ -52,3 +52,4 @@ application-local.yml
 *.pem
 HELP.md
 /CLAUDE.md
+/.claude/
