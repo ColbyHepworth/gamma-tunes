@@ -1,15 +1,31 @@
-server:
-  port: 2333
+# ./audio-node/application.yml  (corrected)
+server:                # <── HTTP server of Lavalink itself
+  port: 2333           # WebSocket & REST will now bind to 2333
   address: 0.0.0.0
+
 lavalink:
-  server:
-    password: "${LAVALINK_PASSWORD}" # Uses the environment variable
+  server:              # <── Lavalink-specific options
+    password: "${LAVALINK_PASSWORD}"
     sources:
-      youtube: true
-      soundcloud: true
-    player-update-interval: 5 # How often to update player status (in seconds)
+      youtube: false
+    player-update-interval: 5
+  plugins:
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.13.4"
+      snapshot: false
 
 logging:
   level:
     root: INFO
     lavalink: INFO
+
+plugins:
+  youtube:
+    enabled: true
+    allowSearch: true
+    allowDirectVideoIds: true
+    allowDirectPlaylistIds: true
+    clients:
+      - MUSIC
+      - ANDROID_VR
+      - WEB
+      - WEBEMBEDDED

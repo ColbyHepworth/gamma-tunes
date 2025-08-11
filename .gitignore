@@ -51,3 +51,4 @@ application-local.yml
 *.key
 *.pem
 HELP.md
+/CLAUDE.md
