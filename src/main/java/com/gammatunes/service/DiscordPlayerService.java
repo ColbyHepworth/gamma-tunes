@@ -4,6 +4,7 @@ import com.gammatunes.model.dto.RequesterInfo;
 import com.gammatunes.component.discord.DiscordVoiceConnector;
 import com.gammatunes.exception.player.MemberNotInVoiceChannelException;
 import com.gammatunes.component.audio.interaction.PlayerInteractionOrchestrator;
+import com.gammatunes.component.audio.core.PlayerRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Member;
@@ -24,6 +25,7 @@ public class DiscordPlayerService {
     private final PlayerInteractionOrchestrator playerControlService;
     private final DiscordVoiceConnector discordVoiceConnector;
     private final PlayerPanelService playerPanelService;
+    private final PlayerRegistry playerRegistry;
 
     /**
      * Plays a track for the specified member in their current voice channel.
@@ -215,13 +217,15 @@ public class DiscordPlayerService {
 
     /**
      * Stops the player for the specified member and disconnects from the voice channel.
-     * Deletes the player panel associated with the guild.
+     * Removes the player from the registry and deletes the player panel associated with the guild.
      *
      * @param member The member who requested to stop the player.
      * @return A Mono that completes when the player is stopped and disconnected.
      */
     public Mono<Void> stop(Member member) {
         long guildId = member.getGuild().getIdLong();
+        log.debug("Stopping player for member {} in guild {}", member.getId(), guildId);
+
         return playerControlService.stop(guildId)
             .onErrorResume(error -> {
                 log.warn("Player stop failed for guild {}", guildId, error);
@@ -232,6 +236,10 @@ public class DiscordPlayerService {
                 return Mono.empty();
             }))
             .then(discordVoiceConnector.disconnect(guildId))
+            .doFinally(signal -> {
+                playerRegistry.destroy(guildId);
+                log.debug("Player removed from registry for guild {}", guildId);
+            })
             .name("stop");
     }
 
