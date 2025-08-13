@@ -3,7 +3,6 @@ package com.gammatunes.service;
 import com.gammatunes.component.discord.ui.PlayerPanelCache;
 import com.gammatunes.model.dto.MessageRef;
 import com.gammatunes.component.discord.ui.panel.PlayerPanelManager;
-import com.gammatunes.component.audio.core.PlayerRegistry;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +26,6 @@ public class PlayerPanelService {
 
     private final PlayerPanelManager gateway;
     private final PlayerPanelCache cache;
-    private final PlayerRegistry playerRegistry;
 
     @Value("${gamma.bot.player.panel.min-refresh-gap-ms:1000}")
     private long minRefreshGapMs;
@@ -104,13 +102,7 @@ public class PlayerPanelService {
         return gateway.updatePanel(ref, cache.getStatus(guildId))
             .doOnSuccess(v -> lastWriteAt.put(guildId, System.currentTimeMillis()))
             .onErrorResume(e -> {
-                if (!playerRegistry.exists(guildId)) {
-                    log.debug("Player no longer exists for guild {}, cleaning up panel reference", guildId);
-                    cache.removeMessage(guildId);
-                    lastWriteAt.remove(guildId);
-                    return Mono.empty();
-                }
-
+                // If the message vanished or edit failed, try to recreate once
                 log.warn("Update failed for {}: {} – attempting recreate", ref, e.toString());
                 return gateway.recreatePanel(ref, cache.getStatus(guildId))
                     .doOnNext(newRef -> {

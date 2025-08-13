@@ -44,16 +44,6 @@ public class PlayerRegistry {
     }
 
     /**
-     * Checks if a player exists for the given guild without creating one.
-     *
-     * @param guildId Discord guild/server id
-     * @return true if a player exists for this guild, false otherwise
-     */
-    public boolean exists(long guildId) {
-        return players.containsKey(guildId);
-    }
-
-    /**
      * Destroys the player for a guild, cleaning up resources and removing it from the cache.
      *
      * @param guildId Discord guild/server id
