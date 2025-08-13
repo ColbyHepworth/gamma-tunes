@@ -32,6 +32,20 @@ public class TrackScheduler {
     }
 
     /**
+     * Enqueues multiple tracks to the end of the queue.
+     * If the queue is empty, sets the current index to 0.
+     *
+     * @param tracksToEnqueue The list of tracks to enqueue.
+     */
+    public synchronized void enqueueAll(List<Track> tracksToEnqueue) {
+        if (tracksToEnqueue.isEmpty()) return;
+        
+        log.debug("Enqueuing {} tracks", tracksToEnqueue.size());
+        tracks.addAll(tracksToEnqueue);
+        if (currentIndex == -1) currentIndex = 0;
+    }
+
+    /**
      * Pushes a track into the queue at the position after the current track.
      * If no current track is set, behaves like enqueue.
      *
