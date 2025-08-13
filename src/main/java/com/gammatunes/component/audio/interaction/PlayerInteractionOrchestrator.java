@@ -36,10 +36,14 @@ public class PlayerInteractionOrchestrator {
      */
     public Mono<Void> play(long guildId, String query, RequesterInfo requesterInfo) {
         log.debug("Playing track for guild {}: {}", guildId, query);
-        return trackQueryService.resolve(query)
-            .map(track -> attachRequester(track, requesterInfo))
-            .flatMap(track -> playerRegistry.getOrCreate(guildId)
-                .flatMap(player -> player.play(track)))
+        return trackQueryService.resolveAll(query)
+            .map(tracks -> tracks.stream()
+                .map(track -> attachRequester(track, requesterInfo))
+                .toList())
+            .flatMap(tracks -> playerRegistry.getOrCreate(guildId)
+                .flatMap(player -> tracks.size() == 1 
+                    ? player.play(tracks.getFirst())
+                    : player.playAll(tracks)))
             .subscribeOn(Schedulers.boundedElastic())
             .doOnError(error -> log.error("Error in play command for guild {}", guildId, error))
             .doOnSuccess(ignored -> log.debug("Play command for guild {} completed.", guildId));

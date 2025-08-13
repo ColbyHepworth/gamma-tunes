@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Represents a single audio player instance for a guild.
@@ -114,6 +113,35 @@ public class Player {
         }
 
         trackScheduler.enqueue(track);
+        publishUIState();
+        return Mono.empty();
+    }
+
+    /**
+     * Plays multiple tracks, starting with the first one and enqueueing the rest.
+     * If the player is stopped or paused, it will start playback with the first track.
+     * All tracks are added to the queue.
+     *
+     * @param tracks The list of tracks to play.
+     * @return A Mono that completes when the play request is processed.
+     */
+    public Mono<Void> playAll(List<Track> tracks) {
+        if (tracks.isEmpty()) return Mono.empty();
+
+        log.debug("Request to play {} tracks (state={}) for guild {}", tracks.size(), getState(), guildId);
+
+        if (getState() == PlayerState.STOPPED || getState() == PlayerState.PAUSED) {
+            // Add first track as next track, then enqueue the rest
+            trackScheduler.push(tracks.getFirst());
+            if (tracks.size() > 1) {
+                trackScheduler.enqueueAll(tracks.subList(1, tracks.size()));
+            }
+            trackScheduler.next();
+            return playCurrentTrack();
+        }
+
+        // Already playing - just enqueue all tracks
+        trackScheduler.enqueueAll(tracks);
         publishUIState();
         return Mono.empty();
     }

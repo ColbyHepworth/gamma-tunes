@@ -51,6 +51,23 @@ public class TrackQueryService {
     }
 
     /**
+     * Resolves tracks from a query string, handling both single tracks and playlists.
+     * If the query resolves to a playlist, returns all tracks in the playlist.
+     * If it's a single track, returns a list with that track.
+     *
+     * @param query The query string to resolve.
+     * @return A Mono that emits a list of resolved Tracks.
+     */
+    public Mono<List<Track>> resolveAll(String query) {
+        String processedQuery = processQuery(query);
+        log.debug("Resolving all tracks from query: '{}' -> '{}'", query, processedQuery);
+
+        return lavalinkClient.getNodes().getFirst()
+            .loadItem(processedQuery)
+            .flatMap(this::allTracks);
+    }
+
+    /**
      * Searches for tracks based on a query string.
      * If the query is a direct URL, it uses it as-is.
      * If it's a search term, it prefixes it with "ytsearch:".
@@ -133,10 +150,10 @@ public class TrackQueryService {
             case TrackLoaded trackLoaded ->
                 trackLoaded(trackLoaded);
 
-            case PlaylistLoaded playlistLoaded
-                // TODO: Handle playlists
-                when playlistLoaded.getTracks().size() <= 50 ->
-                Mono.just(playlistLoaded.getTracks().getFirst());
+            case PlaylistLoaded playlistLoaded ->
+                playlistLoaded.getTracks().isEmpty()
+                    ? Mono.error(new IllegalArgumentException("Playlist is empty"))
+                    : Mono.just(playlistLoaded.getTracks().getFirst());
 
             case SearchResult searchResult ->
                 searchResult.getTracks().isEmpty()
@@ -148,6 +165,39 @@ public class TrackQueryService {
 
             case LoadFailed lf ->
                 Mono.error(new IllegalStateException("Failed to load track: " + lf.getException().getMessage()));
+            default -> throw new IllegalStateException("Unexpected load result: " + loadResult);
+        };
+    }
+
+    /**
+     * Extracts all tracks from the Lavalink load result.
+     * Handles different types of load results, returning all tracks for playlists or single track as a list.
+     *
+     * @param loadResult The result of the track loading operation.
+     * @return A Mono that emits a list of all Tracks or an error if no tracks were found.
+     */
+    private Mono<List<Track>> allTracks(LavalinkLoadResult loadResult) {
+        return switch (loadResult) {
+
+            case TrackLoaded trackLoaded ->
+                Mono.just(List.of(trackLoaded.getTrack()));
+
+            case PlaylistLoaded playlistLoaded ->
+                playlistLoaded.getTracks().isEmpty()
+                    ? Mono.error(new IllegalArgumentException("Playlist is empty"))
+                    : Mono.just(playlistLoaded.getTracks());
+
+            case SearchResult searchResult ->
+                searchResult.getTracks().isEmpty()
+                    ? Mono.error(new IllegalArgumentException("No results for query"))
+                    : Mono.just(List.of(searchResult.getTracks().getFirst()));
+
+            case NoMatches noMatches ->
+                Mono.error(new IllegalArgumentException("Nothing found for query"));
+
+            case LoadFailed lf ->
+                Mono.error(new IllegalStateException("Failed to load track: " + lf.getException().getMessage()));
+                
             default -> throw new IllegalStateException("Unexpected load result: " + loadResult);
         };
     }
