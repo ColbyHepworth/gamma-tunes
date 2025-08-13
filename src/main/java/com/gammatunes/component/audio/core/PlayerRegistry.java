@@ -44,19 +44,22 @@ public class PlayerRegistry {
     }
 
     /**
+     * Checks if a player exists for the given guild without creating one.
+     *
+     * @param guildId Discord guild/server id
+     * @return true if a player exists for this guild, false otherwise
+     */
+    public boolean exists(long guildId) {
+        return players.containsKey(guildId);
+    }
+
+    /**
      * Destroys the player for a guild, cleaning up resources and removing it from the cache.
      *
      * @param guildId Discord guild/server id
      */
     public void destroy(long guildId) {
         players.remove(guildId);
-        lavalinkClient.getOrCreateLink(guildId)
-            .destroy()
-            .subscribe(
-                null,
-                error -> log.warn("Error destroying Lavalink link for guild {}: {}", guildId, error.toString()),
-                () -> log.debug("Destroyed Lavalink link for guild {}", guildId)
-            );
         log.debug("Destroyed player for guild {}", guildId);
     }
 }
