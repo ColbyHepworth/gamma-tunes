@@ -1,97 +1,97 @@
-# File: .github/workflows/ci-cd.yml
-name: Backend CI/CD
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  workflow_dispatch:
-
-jobs:
-  # ────────────────────────────────────────────────────────────────
-  # 1) RUN FAST TESTS (Unit + Component Integration)
-  #    Runs on every push and pull request.
-  # ────────────────────────────────────────────────────────────────
-  fast-tests:
-    name: Backend • Unit & Integration Tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: ☕ Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: gradle
-
-      - name: ✅ Run unit and integration tests
-        run: ./gradlew --no-daemon clean verifyAll
-
-  # ────────────────────────────────────────────────────────────────
-  # 2) BUILD AND PUSH DOCKER IMAGE
-  #    Only runs on a push to main, after ALL tests have passed.
-  # ────────────────────────────────────────────────────────────────
-  build-and-push:
-    name: 🐳 Build & Push Docker Image
-    needs: [fast-tests]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: 🛠️ Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: 🔐 Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🐳 Build & Push Backend Image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: backend/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/colbyhepworth/gamma-tunes/backend:latest
-            ghcr.io/colbyhepworth/gamma-tunes/backend:${{ github.sha }}
-          cache-from: type=gha
-          cache-to:   type=gha,mode=max
-
-  # ────────────────────────────────────────────────────────────────
-  # 3) DEPLOY TO STAGING
-  #    Only runs on a push to main, after the image is built.
-  # ────────────────────────────────────────────────────────────────
-#  deploy-staging:
-#    name: 🚀 Deploy to Staging
-#    needs: build-and-push
-#    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+## File: .github/workflows/ci-cd.yml
+#name: Backend CI/CD
+#
+#on:
+#  push:
+#    branches: [ "main" ]
+#  pull_request:
+#    branches: [ "main" ]
+#  workflow_dispatch:
+#
+#jobs:
+#  # ────────────────────────────────────────────────────────────────
+#  # 1) RUN FAST TESTS (Unit + Component Integration)
+#  #    Runs on every push and pull request.
+#  # ────────────────────────────────────────────────────────────────
+#  fast-tests:
+#    name: Backend • Unit & Integration Tests
 #    runs-on: ubuntu-latest
-#    environment: staging
 #
 #    steps:
-#      - name: 🚀 Deploy via SSH
-#        uses: appleboy/ssh-action@v1.0.3
+#      - name: 📥 Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: ☕ Set up JDK 21
+#        uses: actions/setup-java@v4
 #        with:
-#          host: ${{ secrets.STAGING_HOST }}
-#          username: ${{ secrets.STAGING_USER }}
-#          key: ${{ secrets.STAGING_SSH_KEY }}
-#          script: |
-#            cd /opt/gamma-tunes
-#            echo ${{ secrets.GHCR_TOKEN }} | \
-#              docker login ghcr.io -u ${{ github.actor }} --password-stdin
-#            docker compose pull backend
-#            docker compose up -d --force-recreate
-#            docker image prune -f --filter "until=24h"
+#          java-version: "21"
+#          distribution: "temurin"
+#          cache: gradle
+#
+#      - name: ✅ Run unit and integration tests
+#        run: ./gradlew --no-daemon clean verifyAll
+#
+#  # ────────────────────────────────────────────────────────────────
+#  # 2) BUILD AND PUSH DOCKER IMAGE
+#  #    Only runs on a push to main, after ALL tests have passed.
+#  # ────────────────────────────────────────────────────────────────
+#  build-and-push:
+#    name: 🐳 Build & Push Docker Image
+#    needs: [fast-tests]
+#    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#    runs-on: ubuntu-latest
+#    permissions:
+#      contents: read
+#      packages: write
+#
+#    steps:
+#      - name: 📥 Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: 🛠️ Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v3
+#
+#      - name: 🔐 Login to GHCR
+#        uses: docker/login-action@v3
+#        with:
+#          registry: ghcr.io
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: 🐳 Build & Push Backend Image
+#        uses: docker/build-push-action@v6
+#        with:
+#          context: .
+#          file: backend/Dockerfile
+#          push: true
+#          tags: |
+#            ghcr.io/colbyhepworth/gamma-tunes/backend:latest
+#            ghcr.io/colbyhepworth/gamma-tunes/backend:${{ github.sha }}
+#          cache-from: type=gha
+#          cache-to:   type=gha,mode=max
+#
+#  # ────────────────────────────────────────────────────────────────
+#  # 3) DEPLOY TO STAGING
+#  #    Only runs on a push to main, after the image is built.
+#  # ────────────────────────────────────────────────────────────────
+##  deploy-staging:
+##    name: 🚀 Deploy to Staging
+##    needs: build-and-push
+##    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+##    runs-on: ubuntu-latest
+##    environment: staging
+##
+##    steps:
+##      - name: 🚀 Deploy via SSH
+##        uses: appleboy/ssh-action@v1.0.3
+##        with:
+##          host: ${{ secrets.STAGING_HOST }}
+##          username: ${{ secrets.STAGING_USER }}
+##          key: ${{ secrets.STAGING_SSH_KEY }}
+##          script: |
+##            cd /opt/gamma-tunes
+##            echo ${{ secrets.GHCR_TOKEN }} | \
+##              docker login ghcr.io -u ${{ github.actor }} --password-stdin
+##            docker compose pull backend
+##            docker compose up -d --force-recreate
+##            docker image prune -f --filter "until=24h"
