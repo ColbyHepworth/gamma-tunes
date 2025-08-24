@@ -36,7 +36,7 @@ public class TrackQueryService {
     /**
      * Resolves a track from a query string.
      * If the query is a direct URL, it uses it as-is.
-     * If it's a search term, it prefixes it with "ytsearch:".
+     * If it's a search term, it prefixes it with "scsearch:".
      *
      * @param query The query string to resolve.
      * @return A Mono that emits the resolved Track.
@@ -70,7 +70,7 @@ public class TrackQueryService {
     /**
      * Searches for tracks based on a query string.
      * If the query is a direct URL, it uses it as-is.
-     * If it's a search term, it prefixes it with "ytsearch:".
+     * If it's a search term, it prefixes it with "scsearch:".
      *
      * @param query The query string to search for tracks.
      * @param limit The maximum number of tracks to return.
@@ -110,8 +110,8 @@ public class TrackQueryService {
             return trimmedQuery;
         }
 
-        // Otherwise, treat as a search term and prefix with YouTube search
-        return "ytsearch:" + trimmedQuery;
+        // Otherwise, treat as a search term and prefix with SoundCloud search
+        return "scsearch:" + trimmedQuery;
     }
 
     /**
