@@ -61,15 +61,8 @@ public class DiscordVoiceConnector {
     public Mono<Void> disconnect(long guildId) {
         return Mono.fromRunnable(() -> {
             Guild guild = getGuild(guildId);
-            AudioManager am = guild.getAudioManager();
-
-            if (am.isConnected()) {
-                var ch = Objects.requireNonNull(am.getConnectedChannel());
-                log.info("Disconnecting {} in {}", ch.getName(), guild.getName());
-                am.closeAudioConnection();
-            } else {
-                log.debug("Already disconnected in guild {}", guild.getName());
-            }
+            guild.getAudioManager().closeAudioConnection();
+            log.info("Disconnecting voice in {}", guild.getName());
         }).subscribeOn(Schedulers.boundedElastic()).then();
     }
 

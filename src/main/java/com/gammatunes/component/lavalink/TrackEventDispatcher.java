@@ -89,7 +89,7 @@ public class TrackEventDispatcher {
                             Thread.currentThread().getName()))
                     .concatMap(event -> {
                         long startedNanos = System.nanoTime();
-                        return playerRegistry.getOrCreate(groupByGuild.key())
+                        return playerRegistry.get(groupByGuild.key())
                             .flatMap(player ->
                                 player.getEventHandler().onTrackEnd(event.getTrack(), event.getEndReason()))
                             .doOnSuccess(ignored ->

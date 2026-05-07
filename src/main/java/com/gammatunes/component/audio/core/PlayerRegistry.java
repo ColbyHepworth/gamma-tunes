@@ -49,6 +49,10 @@ public class PlayerRegistry {
      * @param guildId Discord guild/server id
      * @return true if a player exists for this guild, false otherwise
      */
+    public Mono<Player> get(long guildId) {
+        return Mono.justOrEmpty(players.get(guildId));
+    }
+
     public boolean exists(long guildId) {
         return players.containsKey(guildId);
     }
