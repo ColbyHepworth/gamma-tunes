@@ -50,6 +50,8 @@ docker-compose-logs/
 application-local.yml
 *.key
 *.pem
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
 HELP.md
 /CLAUDE.md
 /.claude/

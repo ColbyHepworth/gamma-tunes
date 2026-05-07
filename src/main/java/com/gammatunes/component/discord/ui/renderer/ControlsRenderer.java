@@ -2,8 +2,8 @@ package com.gammatunes.component.discord.ui.renderer;
 
 import com.gammatunes.model.dto.PlayerView;
 import com.gammatunes.component.discord.ui.constants.UiConstants;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 

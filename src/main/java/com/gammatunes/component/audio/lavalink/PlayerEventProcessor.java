@@ -73,10 +73,12 @@ public record PlayerEventProcessor(Player player) {
                     });
                 }
             }
-            case REPLACED ->
-                Mono.empty();
             case STOPPED -> {
-                player.updateState(PlayerState.STOPPED);
+                if (player.getQueue().isEmpty()) {
+                    player.updateState(PlayerState.IDLE);
+                } else {
+                    player.updateState(PlayerState.STOPPED);
+                }
                 yield Mono.empty();
             }
             case LOAD_FAILED -> player.playNextOrBecomeIdle().onErrorResume(e -> {

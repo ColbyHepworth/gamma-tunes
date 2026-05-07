@@ -1,9 +1,9 @@
 package com.gammatunes.component.discord.ui.renderer;
 
 import com.gammatunes.model.dto.PlayerView;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.components.selections.SelectOption;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 

@@ -1,7 +1,7 @@
 package com.gammatunes.component.discord.ui.renderer;
 
 import com.gammatunes.model.dto.PlayerView;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
 
 import java.util.List;
 

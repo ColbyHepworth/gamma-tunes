@@ -9,8 +9,11 @@ import dev.arbjerg.lavalink.libraries.jda.JDAVoiceUpdateListener;
 import io.github.cdimascio.dotenv.Dotenv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import moe.kyokobot.libdave.NativeDaveFactory;
+import moe.kyokobot.libdave.jda.LDJDADaveSessionFactory;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.audio.AudioModuleConfig;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
@@ -59,6 +62,8 @@ public class DiscordConfig {
             .enableCache(CacheFlag.VOICE_STATE)
             .setActivity(Activity.listening("/play"))
             .setVoiceDispatchInterceptor(new JDAVoiceUpdateListener(lavalinkClient))
+            .setAudioModuleConfig(new AudioModuleConfig()
+                .withDaveSessionFactory(new LDJDADaveSessionFactory(new NativeDaveFactory())))
             .build()
             .awaitReady();
 

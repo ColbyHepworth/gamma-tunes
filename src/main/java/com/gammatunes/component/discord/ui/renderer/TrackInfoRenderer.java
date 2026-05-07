@@ -17,6 +17,7 @@ public final class TrackInfoRenderer implements FieldRenderer {
     private static final String LOGO_URL = "https://i.imgur.com/Aufpw9Q.png";
     private static final String YOUTUBE_ICON_URL = "https://img.freepik.com/premium-vector/youtube-icon-illustration-youtube-app-logo-social-media-icon_561158-3674.jpg";
     private static final String SPOTIFY_ICON_URL = "https://www.citypng.com/public/uploads/preview/square-black-green-spotify-app-icon-png-701751694969849j7wtxvnrgo.png";
+    private static final String SOUNDCLOUD_ICON_URL = "https://cdn-icons-png.flaticon.com/512/48/48967.png";
 
     /**
      * Unique identifier for this field renderer.
@@ -37,10 +38,32 @@ public final class TrackInfoRenderer implements FieldRenderer {
                 embedBuilder.setImage(artworkUrl);
             }
         }, () -> {
-            embedBuilder.setTitle("No track playing")
-                .setDescription("Use **/play** to add a song!");
-            embedBuilder.setAuthor(null);
+            renderIdleState(embedBuilder, playerView);
         });
+    }
+
+    /**
+     * Renders the idle state of the player with helpful instructions.
+     *
+     * @param embedBuilder The EmbedBuilder to modify.
+     * @param playerView   The current player view.
+     */
+    private void renderIdleState(EmbedBuilder embedBuilder, PlayerView playerView) {
+        embedBuilder.setTitle("🎵 Ready to play music!");
+        embedBuilder.setAuthor(null);
+
+        StringBuilder description = new StringBuilder();
+        description.append("**Get started with these commands:**\n");
+        description.append("• `/play <song>` - Play a song or playlist\n");
+
+        if (playerView.queue().isEmpty() && playerView.history().isEmpty()) {
+            description.append("*Play a song to begin.*");
+        } else if (!playerView.history().isEmpty()) {
+            description.append("*Queue finished. Use `/play` to add more songs or `/previous` to replay from history.*");
+        }
+
+        embedBuilder.setDescription(description.toString());
+        embedBuilder.setColor(0x7289DA);
     }
 
     /**
@@ -57,6 +80,10 @@ public final class TrackInfoRenderer implements FieldRenderer {
             embedBuilder.setAuthor("YouTube", null, YOUTUBE_ICON_URL);
         } else if (source.contains("spotify")) {
             embedBuilder.setAuthor("Spotify", null, SPOTIFY_ICON_URL);
+        } else if (source.contains("soundcloud")) {
+            embedBuilder.setAuthor("SoundCloud", null, SOUNDCLOUD_ICON_URL);
+        } else {
+            embedBuilder.setAuthor(author != null ? author : "Unknown", null, null);
         }
     }
 

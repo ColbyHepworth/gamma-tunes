@@ -37,8 +37,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     /* Discord + audio */
-    implementation("net.dv8tion:JDA:5.6.1")
-    implementation("dev.arbjerg:lavalink-client:3.2.0")
+    implementation("net.dv8tion:JDA:6.3.2")
+    implementation("moe.kyokobot.libdave:adapter-jda:0.1.2")
+    implementation("moe.kyokobot.libdave:impl-jni:0.1.2")
+    implementation("dev.arbjerg:lavalink-client:3.4.0")
 
 
     /* Convenience / JSON */
@@ -84,6 +86,18 @@ tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
     /* embed React static assets under BOOT-INF/classes/static */
     //    dependsOn(copyFrontend)
     from(layout.buildDirectory.dir("frontend")) { into("static") }
+}
+
+/* ───────────── 5b. LOCAL DEV (bootRun) ───────────── */
+tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
+    val envFile = rootProject.file(".env")
+    if (envFile.exists()) {
+        envFile.readLines()
+            .filter { it.isNotBlank() && !it.startsWith("#") }
+            .map { it.split("=", limit = 2) }
+            .filter { it.size == 2 }
+            .forEach { (key, value) -> environment(key.trim(), value.trim()) }
+    }
 }
 
 /* ───────────── 6. TESTS ───────────── */

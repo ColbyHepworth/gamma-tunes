@@ -79,7 +79,8 @@ public class Player {
         if (trackScheduler.next().isPresent()) {
             return playCurrentTrack();
         }
-        publishUIState();
+        log.debug("No next track available, entering idle state for guild {}", guildId);
+        updateState(PlayerState.IDLE);
         return Mono.empty();
     }
 
