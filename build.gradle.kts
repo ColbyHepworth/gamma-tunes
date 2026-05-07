@@ -8,7 +8,6 @@ plugins {
     idea
     id("org.springframework.boot")        version "3.3.2"
     id("io.spring.dependency-management") version "1.1.5"
-    id("com.github.node-gradle.node")     version "7.0.2"   // React build
 }
 
 /* ───────────── 2. REPOSITORIES ───────────── */
@@ -42,7 +41,6 @@ dependencies {
     implementation("moe.kyokobot.libdave:impl-jni:0.1.2")
     implementation("dev.arbjerg:lavalink-client:3.4.0")
 
-
     /* Convenience / JSON */
     implementation("io.github.cdimascio:java-dotenv:5.2.2")
     implementation("com.google.code.gson:gson:2.10.1")
@@ -53,42 +51,16 @@ dependencies {
     /* Testing */
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
-    testImplementation("org.mockito:mockito-core:5.12.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.12.0")
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-/* ───────────── 4. NODE / VITE (REACT FRONTEND) ───────────── */
-//node {
-//    download.set(true)                         // use a project-local Node binary
-//    version.set("20.14.0")
-//    npmVersion.set("10.7.0")
-//    nodeProjectDir.set(file("${project.projectDir}/frontend"))
-//}
-
-/* Build React → frontend/dist */
-//val npmInstall by tasks.registering(com.github.gradle.node.npm.task.NpmInstallTask::class)
-//val npmBuild   by tasks.registering(com.github.gradle.node.npm.task.NpmTask::class) {
-//    dependsOn(npmInstall)
-//    args.set(listOf("run", "build"))
-//}
-//val copyFrontend by tasks.registering(Copy::class) {
-//    dependsOn(npmBuild)
-//    from(file("frontend/dist"))
-//    into(layout.buildDirectory.dir("frontend"))   // <build>/frontend/
-//}
-
-/* ───────────── 5. SPRING BOOT PACKAGING ───────────── */
+/* ───────────── 4. SPRING BOOT PACKAGING ───────────── */
 tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
     archiveFileName.set("gamma-tunes.jar")
-    mainClass.set("com.gammatunes.GammaTunesApplication")  // adjust if your class moved
-    /* embed React static assets under BOOT-INF/classes/static */
-    //    dependsOn(copyFrontend)
-    from(layout.buildDirectory.dir("frontend")) { into("static") }
+    mainClass.set("com.gammatunes.GammaTunesApplication")
 }
 
-/* ───────────── 5b. LOCAL DEV (bootRun) ───────────── */
+/* ───────────── 5. LOCAL DEV (bootRun) ───────────── */
 tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
     val envFile = rootProject.file(".env")
     if (envFile.exists()) {
@@ -101,23 +73,18 @@ tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
 }
 
 /* ───────────── 6. TESTS ───────────── */
-//tasks.withType<Test> { useJUnitPlatform() }
+tasks.withType<Test> { useJUnitPlatform() }
 
 /* ───────────── 7. DOCKER-COMPOSE HELPERS ───────────── */
 tasks.register<Exec>("composeUp") {
-    group = "verification"
+    group = "docker"
     description = "Build & start the full stack via Docker Compose"
-    dependsOn(tasks.named("bootJar"))          // root bootJar
+    dependsOn(tasks.named("bootJar"))
     commandLine("docker", "compose", "up", "--build", "-d")
 }
 
 tasks.register<Exec>("composeDown") {
-    group = "verification"
+    group = "docker"
     description = "Stop stack and remove volumes"
     commandLine("docker", "compose", "down", "-v")
-}
-tasks.register("verifyAll") {
-    group = "verification"
-    description = "Runs all checks and tests for the project."
-    dependsOn("clean", "check")
 }
