@@ -1,5 +1,6 @@
 package com.gammatunes;
 
+import com.gammatunes.component.spotify.config.SpotifyProperties;
 import com.gammatunes.config.LavalinkConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,7 +9,7 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 
-@EnableConfigurationProperties(LavalinkConfig.class)
+@EnableConfigurationProperties({LavalinkConfig.class, SpotifyProperties.class})
 @SpringBootApplication(exclude = {
     DataSourceAutoConfiguration.class,
     HibernateJpaAutoConfiguration.class

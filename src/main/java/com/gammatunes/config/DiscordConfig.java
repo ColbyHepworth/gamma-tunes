@@ -15,6 +15,8 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.audio.AudioModuleConfig;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.springframework.context.annotation.Bean;
@@ -91,13 +93,26 @@ public class DiscordConfig {
         jda.addEventListener(selectMenuInteractionHandler);
 
         List<BotCommand> botCommands = event.getApplicationContext().getBeanProvider(BotCommand.class).stream().toList();
+        List<CommandData> commandData = botCommands.stream()
+            .map(BotCommand::getCommandData)
+            .collect(Collectors.toList());
 
-        log.info("Updating slash commands with Discord...");
+        log.info("Updating guild slash commands with Discord: {}",
+            botCommands.stream().map(BotCommand::name).collect(Collectors.joining(", ")));
+
         jda.updateCommands()
-            .addCommands(botCommands.stream().map(BotCommand::getCommandData).collect(Collectors.toList()))
             .queue(
-                success -> log.info("Successfully updated {} slash commands.", success.size()),
-                error -> log.error("Failed to update slash commands.", error)
+                success -> log.info("Cleared {} global slash commands.", success.size()),
+                error -> log.error("Failed to clear global slash commands.", error)
             );
+
+        for (Guild guild : jda.getGuilds()) {
+            guild.updateCommands()
+                .addCommands(commandData)
+                .queue(
+                    success -> log.info("Successfully updated {} guild slash commands for {}.", success.size(), guild.getName()),
+                    error -> log.error("Failed to update guild slash commands for {}.", guild.getName(), error)
+                );
+        }
     }
 }
