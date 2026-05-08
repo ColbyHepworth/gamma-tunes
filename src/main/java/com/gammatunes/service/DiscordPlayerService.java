@@ -1,10 +1,13 @@
 package com.gammatunes.service;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.gammatunes.component.audio.core.Player;
 import com.gammatunes.model.dto.RequesterInfo;
 import com.gammatunes.component.discord.DiscordVoiceConnector;
 import com.gammatunes.exception.player.MemberNotInVoiceChannelException;
-import com.gammatunes.component.audio.interaction.PlayerInteractionOrchestrator;
 import com.gammatunes.component.audio.core.PlayerRegistry;
+import dev.arbjerg.lavalink.client.player.Track;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Member;
@@ -22,10 +25,10 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class DiscordPlayerService {
 
-    private final PlayerInteractionOrchestrator playerControlService;
+    private final PlayerRegistry playerRegistry;
+    private final TrackQueryService trackQueryService;
     private final DiscordVoiceConnector discordVoiceConnector;
     private final PlayerPanelService playerPanelService;
-    private final PlayerRegistry playerRegistry;
 
     /**
      * Plays a track for the specified member in their current voice channel.
@@ -50,23 +53,28 @@ public class DiscordPlayerService {
      * @return A Mono that completes when the track is played.
      */
     public Mono<Void> play(Member member, String query, TextChannel textChannel) {
-        log.debug("Playing track for member {}: {}", member.getId(), query);
         return Mono.defer(() -> {
             AudioChannel audioChannel = getAudioChannelOrThrow(member);
             long guildId = member.getGuild().getIdLong();
             RequesterInfo requesterInfo = RequesterInfo.fromMember(member);
 
             Mono<Void> playMono = discordVoiceConnector.connect(guildId, audioChannel.getIdLong())
-                .then(playerControlService.play(guildId, query, requesterInfo));
+                .then(trackQueryService.resolveAll(query))
+                .map(tracks -> tracks.stream()
+                    .map(track -> attachRequester(track, requesterInfo))
+                    .toList())
+                .flatMap(tracks -> playerRegistry.getOrCreate(guildId)
+                    .flatMap(player -> tracks.size() == 1
+                        ? player.play(tracks.getFirst())
+                        : player.playAll(tracks)));
 
             if (textChannel != null && playerPanelService.getMessage(guildId).isEmpty()) {
-                log.debug("Creating player panel for guild {} in channel {} in play", guildId, textChannel.getId());
                 return playMono
                     .then(Mono.defer(() -> playerPanelService.createPanel(guildId, textChannel)));
             }
 
             return playMono;
-        }).name("play");
+        });
     }
 
     /**
@@ -92,23 +100,24 @@ public class DiscordPlayerService {
      * @return A Mono that completes when the track is played immediately.
      */
     public Mono<Void> playNow(Member member, String query, TextChannel textChannel) {
-        log.debug("Playing track immediately for member {}: {}", member.getId(), query);
         return Mono.defer(() -> {
             AudioChannel audioChannel = getAudioChannelOrThrow(member);
             long guildId = member.getGuild().getIdLong();
             RequesterInfo requesterInfo = RequesterInfo.fromMember(member);
 
             Mono<Void> playNowMono = discordVoiceConnector.connect(guildId, audioChannel.getIdLong())
-                .then(playerControlService.playNow(guildId, query, requesterInfo));
+                .then(trackQueryService.resolve(query))
+                .map(track -> attachRequester(track, requesterInfo))
+                .flatMap(track -> playerRegistry.getOrCreate(guildId)
+                    .flatMap(player -> player.playNow(track)));
 
             if (textChannel != null && playerPanelService.getMessage(guildId).isEmpty()) {
-                log.debug("Creating player panel for guild {} in channel {} in playNow", guildId, textChannel.getId());
                 return playNowMono
                     .then(Mono.defer(() -> playerPanelService.createPanel(guildId, textChannel)));
             }
 
             return playNowMono;
-        }).name("playNow");
+        });
     }
 
     /**
@@ -119,10 +128,9 @@ public class DiscordPlayerService {
      * @return A Mono that completes when the jump operation is done.
      */
     public Mono<Void> jumpToTrack(Member member, String trackIdentifier) {
-        log.debug("Jumping to track {} for member {}", trackIdentifier, member.getId());
         long guildId = member.getGuild().getIdLong();
-        return playerControlService.jumpToTrack(guildId, trackIdentifier)
-            .name("jumpToTrack");
+        return playerRegistry.getOrCreate(guildId)
+            .flatMap(player -> player.jumpToTrack(trackIdentifier));
     }
 
     /**
@@ -132,10 +140,8 @@ public class DiscordPlayerService {
      * @return A Mono that completes when the player is paused.
      */
     public Mono<Void> pause(Member member) {
-        log.debug("Pausing player for member {}", member.getId());
         long guildId = member.getGuild().getIdLong();
-        return playerControlService.pause(guildId)
-            .name("pause");
+        return playerRegistry.getOrCreate(guildId).flatMap(Player::pause);
     }
 
     /**
@@ -145,10 +151,8 @@ public class DiscordPlayerService {
      * @return A Mono that completes when the player is resumed.
      */
     public Mono<Void> resume(Member member) {
-        log.debug("Resuming player for member {}", member.getId());
         long guildId = member.getGuild().getIdLong();
-        return playerControlService.resume(guildId)
-            .name("resume");
+        return playerRegistry.getOrCreate(guildId).flatMap(Player::resume);
     }
 
     /**
@@ -158,10 +162,8 @@ public class DiscordPlayerService {
      * @return A Mono that completes when the skip operation is done.
      */
     public Mono<Void> skip(Member member) {
-        log.debug("Skipping track for member {}", member.getId());
         long guildId = member.getGuild().getIdLong();
-        return playerControlService.skip(guildId)
-            .name("skip");
+        return playerRegistry.getOrCreate(guildId).flatMap(Player::skip);
     }
 
     /**
@@ -171,10 +173,8 @@ public class DiscordPlayerService {
      * @return A Mono that completes when the previous track operation is done.
      */
     public Mono<Void> previous(Member member) {
-        log.debug("Going back to previous track for member {}", member.getId());
         long guildId = member.getGuild().getIdLong();
-        return playerControlService.previous(guildId)
-            .name("previous");
+        return playerRegistry.getOrCreate(guildId).flatMap(Player::previous);
     }
 
     /**
@@ -184,10 +184,10 @@ public class DiscordPlayerService {
      * @return A Mono that completes when the shuffle operation is done.
      */
     public Mono<Void> shuffle(Member member) {
-        log.debug("Shuffling player for member {}", member.getId());
         long guildId = member.getGuild().getIdLong();
-        return playerControlService.shuffle(guildId)
-            .name("shuffle");
+        return playerRegistry.getOrCreate(guildId)
+            .doOnNext(Player::shuffle)
+            .then();
     }
 
     /**
@@ -197,11 +197,10 @@ public class DiscordPlayerService {
      * @return A Mono that completes when the repeat mode is toggled.
      */
     public Mono<Void> toggleRepeat(Member member) {
-        log.debug("Toggling repeat mode for member {}", member.getId());
         long guildId = member.getGuild().getIdLong();
-        return playerControlService.toggleRepeat(guildId)
-            .then()
-            .name("toggleRepeat");
+        return playerRegistry.getOrCreate(guildId)
+            .doOnNext(Player::toggleRepeat)
+            .then();
     }
 
     /**
@@ -212,7 +211,8 @@ public class DiscordPlayerService {
      */
     public Mono<Boolean> getRepeat(Member member) {
         long guildId = member.getGuild().getIdLong();
-        return playerControlService.getRepeat(guildId);
+        return playerRegistry.getOrCreate(guildId)
+            .map(Player::isRepeatEnabled);
     }
 
     /**
@@ -224,9 +224,9 @@ public class DiscordPlayerService {
      */
     public Mono<Void> stop(Member member) {
         long guildId = member.getGuild().getIdLong();
-        log.debug("Stopping player for member {} in guild {}", member.getId(), guildId);
 
-        return playerControlService.stop(guildId)
+        return playerRegistry.getOrCreate(guildId)
+            .flatMap(Player::stop)
             .onErrorResume(error -> {
                 log.warn("Player stop failed for guild {}", guildId, error);
                 return Mono.empty();
@@ -238,9 +238,7 @@ public class DiscordPlayerService {
             .then(discordVoiceConnector.disconnect(guildId))
             .doFinally(signal -> {
                 playerRegistry.destroy(guildId);
-                log.debug("Player removed from registry for guild {}", guildId);
-            })
-            .name("stop");
+            });
     }
 
     /**
@@ -256,5 +254,26 @@ public class DiscordPlayerService {
             throw new MemberNotInVoiceChannelException("Member must be in a voice channel to perform this action.");
         }
         return voiceState.getChannel();
+    }
+
+    /**
+     * Attaches requester information to the track's user data.
+     *
+     * @param track The track to attach the requester info to.
+     * @param requesterInfo The requester information.
+     * @return The track with attached requester info.
+     */
+    private Track attachRequester(Track track, RequesterInfo requesterInfo) {
+        if (requesterInfo == null) {
+            return track;
+        }
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        node.put("userId", requesterInfo.userId());
+        node.put("displayName", requesterInfo.displayName());
+        if (requesterInfo.avatarUrl() != null) {
+            node.put("avatarUrl", requesterInfo.avatarUrl());
+        }
+        track.setUserData(node);
+        return track;
     }
 }
