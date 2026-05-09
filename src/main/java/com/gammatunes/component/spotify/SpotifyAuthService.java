@@ -1,5 +1,6 @@
 package com.gammatunes.component.spotify;
 
+import com.gammatunes.component.spotify.api.response.SpotifyToken;
 import com.gammatunes.component.spotify.config.SpotifyProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -33,7 +34,7 @@ public class SpotifyAuthService {
             .toUri();
     }
 
-    public Mono<SpotifyTokenResponse> exchangeCode(String code) {
+    public Mono<SpotifyToken> exchangeCode(String code) {
         return accountsClient().post()
             .uri("/api/token")
             .header(HttpHeaders.AUTHORIZATION, basicAuthorizationHeader())
@@ -42,10 +43,10 @@ public class SpotifyAuthService {
                 .with("code", code)
                 .with("redirect_uri", spotifyProperties.getRedirectUri().toString()))
             .retrieve()
-            .bodyToMono(SpotifyTokenResponse.class);
+            .bodyToMono(SpotifyToken.class);
     }
 
-    public Mono<SpotifyTokenResponse> refreshAccessToken(String refreshToken) {
+    public Mono<SpotifyToken> refreshAccessToken(String refreshToken) {
         return accountsClient().post()
             .uri("/api/token")
             .header(HttpHeaders.AUTHORIZATION, basicAuthorizationHeader())
@@ -53,7 +54,7 @@ public class SpotifyAuthService {
             .body(BodyInserters.fromFormData("grant_type", "refresh_token")
                 .with("refresh_token", refreshToken))
             .retrieve()
-            .bodyToMono(SpotifyTokenResponse.class);
+            .bodyToMono(SpotifyToken.class);
     }
 
     private WebClient accountsClient() {

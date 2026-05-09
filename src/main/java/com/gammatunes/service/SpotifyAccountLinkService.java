@@ -1,7 +1,9 @@
 package com.gammatunes.service;
 
 import com.gammatunes.component.spotify.SpotifyAuthService;
-import com.gammatunes.component.spotify.SpotifyTokenResponse;
+import com.gammatunes.component.spotify.api.response.SpotifyToken;
+import com.gammatunes.component.spotify.auth.LinkedSpotifyAccount;
+import com.gammatunes.component.spotify.auth.SpotifyTokenStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -24,14 +26,15 @@ public class SpotifyAccountLinkService {
     private static final List<String> DEFAULT_SCOPES = List.of(
         "user-read-currently-playing",
         "user-read-playback-state",
+        "user-modify-playback-state",
         "playlist-read-private",
         "playlist-read-collaborative"
     );
 
     private final SpotifyAuthService spotifyAuthService;
+    private final SpotifyTokenStore spotifyTokenStore;
     private final SecureRandom secureRandom = new SecureRandom();
     private final Map<String, PendingSpotifyAuth> pendingAuthByState = new ConcurrentHashMap<>();
-    private final Map<Long, LinkedSpotifyAccount> linkedAccountsByDiscordUser = new ConcurrentHashMap<>();
 
     public URI createAuthorizationUri(long discordUserId, long guildId) {
         String state = generateState();
@@ -47,25 +50,25 @@ public class SpotifyAccountLinkService {
 
         return spotifyAuthService.exchangeCode(code)
             .map(tokens -> toLinkedAccount(pending, tokens))
-            .doOnNext(account -> linkedAccountsByDiscordUser.put(account.discordUserId(), account));
+            .doOnNext(spotifyTokenStore::save);
     }
 
     public Mono<LinkedSpotifyAccount> refreshTokens(long discordUserId) {
-        LinkedSpotifyAccount existing = linkedAccountsByDiscordUser.get(discordUserId);
+        LinkedSpotifyAccount existing = spotifyTokenStore.findByDiscordUserId(discordUserId).orElse(null);
         if (existing == null) {
             return Mono.error(new IllegalArgumentException("No Spotify account is linked for this Discord user."));
         }
 
         return spotifyAuthService.refreshAccessToken(existing.refreshToken())
             .map(tokens -> refreshedAccount(existing, tokens))
-            .doOnNext(account -> linkedAccountsByDiscordUser.put(account.discordUserId(), account));
+            .doOnNext(spotifyTokenStore::save);
     }
 
     public Optional<LinkedSpotifyAccount> getLinkedAccount(long discordUserId) {
-        return Optional.ofNullable(linkedAccountsByDiscordUser.get(discordUserId));
+        return spotifyTokenStore.findByDiscordUserId(discordUserId);
     }
 
-    private LinkedSpotifyAccount toLinkedAccount(PendingSpotifyAuth pending, SpotifyTokenResponse tokens) {
+    private LinkedSpotifyAccount toLinkedAccount(PendingSpotifyAuth pending, SpotifyToken tokens) {
         return new LinkedSpotifyAccount(
             pending.discordUserId(),
             pending.guildId(),
@@ -77,7 +80,7 @@ public class SpotifyAccountLinkService {
         );
     }
 
-    private LinkedSpotifyAccount refreshedAccount(LinkedSpotifyAccount existing, SpotifyTokenResponse tokens) {
+    private LinkedSpotifyAccount refreshedAccount(LinkedSpotifyAccount existing, SpotifyToken tokens) {
         String refreshToken = tokens.refreshToken() == null || tokens.refreshToken().isBlank()
             ? existing.refreshToken()
             : tokens.refreshToken();
@@ -109,14 +112,4 @@ public class SpotifyAccountLinkService {
         }
     }
 
-    public record LinkedSpotifyAccount(
-        long discordUserId,
-        long guildId,
-        String accessToken,
-        String refreshToken,
-        Instant expiresAt,
-        String scope,
-        String tokenType
-    ) {
-    }
 }

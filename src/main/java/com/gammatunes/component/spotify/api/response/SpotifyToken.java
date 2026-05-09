@@ -1,8 +1,8 @@
-package com.gammatunes.component.spotify;
+package com.gammatunes.component.spotify.api.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record SpotifyTokenResponse(
+public record SpotifyToken(
     @JsonProperty("access_token")
     String accessToken,
 

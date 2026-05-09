@@ -47,6 +47,9 @@ docker-compose-logs/
 # 5\. Secrets & local-only config
 # ─────────────────────────────
 .env
+.local/
+http-client.private.env.json
+**/http-client.private.env.json
 application-local.yml
 *.key
 *.pem
