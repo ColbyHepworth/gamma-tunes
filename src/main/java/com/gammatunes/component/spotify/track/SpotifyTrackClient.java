@@ -21,8 +21,6 @@ public class SpotifyTrackClient {
 
     private final SpotifyApiClient spotifyApiClient;
 
-
-
     public Mono<SpotifyTrack> getTrack(String trackId, SpotifyAccessToken token) {
         return spotifyApiClient.get(
             token,
