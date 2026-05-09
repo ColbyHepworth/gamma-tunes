@@ -1,6 +1,5 @@
 package com.gammatunes.service;
 
-import com.gammatunes.component.audio.core.PlayerRegistry;
 import dev.arbjerg.lavalink.client.LavalinkClient;
 import dev.arbjerg.lavalink.client.player.*;
 import lombok.RequiredArgsConstructor;
@@ -21,15 +20,14 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class TrackQueryService {
 
-    private final PlayerRegistry players;
     private final LavalinkClient lavalinkClient;
 
     /**
      * Regular expression pattern to match various music service URLs.
-     * This includes YouTube, Spotify, SoundCloud, Bandcamp, Deezer, and Open Spotify URLs.
+     * This includes URLs that Lavalink can load directly. Spotify URLs are handled before this service.
      */
     private static final Pattern URL_PATTERN = Pattern.compile(
-        "^(https?://)?(www\\.)?(youtube\\.com|youtu\\.be|spotify\\.com|soundcloud\\.com|bandcamp\\.com|deezer\\.com|open\\.spotify\\.com).*",
+        "^(https?://)?(www\\.)?(youtube\\.com|youtu\\.be|soundcloud\\.com|bandcamp\\.com|deezer\\.com).*",
         Pattern.CASE_INSENSITIVE
     );
 
@@ -148,7 +146,7 @@ public class TrackQueryService {
         return switch (loadResult) {
 
             case TrackLoaded trackLoaded ->
-                trackLoaded(trackLoaded);
+                Mono.just(trackLoaded.getTrack());
 
             case PlaylistLoaded playlistLoaded ->
                 playlistLoaded.getTracks().isEmpty()
@@ -200,39 +198,6 @@ public class TrackQueryService {
                 
             default -> throw new IllegalStateException("Unexpected load result: " + loadResult);
         };
-    }
-
-    /**
-     * Handles the TrackLoaded result by returning the loaded track.
-     *
-     * @param loadResult The TrackLoaded result containing the track.
-     * @return A Mono that emits the loaded Track.
-     */
-    private Mono<Track> trackLoaded(TrackLoaded loadResult) {
-        return Mono.just(loadResult.getTrack());
-    }
-
-    /**
-     * Handles the PlaylistLoaded result by returning the list of tracks in the playlist.
-     *
-     * @param loadResult The PlaylistLoaded result containing the tracks.
-     * @return A Mono that emits the list of tracks in the playlist.
-     */
-    private Mono<List<Track>> playlistLoaded(PlaylistLoaded loadResult) {
-        return Mono.just(loadResult.getTracks());
-    }
-
-    /**
-     * Handles the SearchResult by checking if there are tracks available.
-     * If tracks are found, it returns them; otherwise, it throws an error.
-     *
-     * @param loadResult The SearchResult containing the tracks.
-     * @return A Mono that emits the list of tracks or an error if no tracks were found.
-     */
-    private Mono<List<Track>> searchResult(SearchResult loadResult) {
-        return loadResult.getTracks().isEmpty()
-            ? Mono.error(new IllegalArgumentException("No results for query"))
-            : Mono.just(loadResult.getTracks());
     }
 
     /**
