@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
 public class DiscordPlayerService {
 
     private final PlayerRegistry playerRegistry;
-    private final TrackQueryService trackQueryService;
+    private final PlayInputResolverService playInputResolverService;
     private final DiscordVoiceConnector discordVoiceConnector;
     private final PlayerPanelService playerPanelService;
 
@@ -59,7 +59,7 @@ public class DiscordPlayerService {
             RequesterInfo requesterInfo = RequesterInfo.fromMember(member);
 
             Mono<Void> playMono = discordVoiceConnector.connect(guildId, audioChannel.getIdLong())
-                .then(trackQueryService.resolveAll(query))
+                .then(playInputResolverService.resolveAll(member.getIdLong(), query))
                 .map(tracks -> tracks.stream()
                     .map(track -> attachRequester(track, requesterInfo))
                     .toList())
@@ -106,7 +106,7 @@ public class DiscordPlayerService {
             RequesterInfo requesterInfo = RequesterInfo.fromMember(member);
 
             Mono<Void> playNowMono = discordVoiceConnector.connect(guildId, audioChannel.getIdLong())
-                .then(trackQueryService.resolve(query))
+                .then(playInputResolverService.resolveOne(member.getIdLong(), query))
                 .map(track -> attachRequester(track, requesterInfo))
                 .flatMap(track -> playerRegistry.getOrCreate(guildId)
                     .flatMap(player -> player.playNow(track)));

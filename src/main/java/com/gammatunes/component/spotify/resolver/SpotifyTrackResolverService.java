@@ -1,7 +1,10 @@
 package com.gammatunes.component.spotify.resolver;
 
+import com.gammatunes.component.spotify.api.request.SpotifyPlaylistTracksRequest;
 import com.gammatunes.component.spotify.api.response.SpotifyPlaylistTrackItem;
+import com.gammatunes.component.spotify.api.response.SpotifyPlaylistTracksPage;
 import com.gammatunes.component.spotify.api.response.SpotifyTrack;
+import com.gammatunes.component.spotify.auth.SpotifyAccessToken;
 import com.gammatunes.component.spotify.track.SpotifyPlaylistClient;
 import com.gammatunes.component.spotify.track.SpotifyTrackClient;
 import com.gammatunes.service.SpotifyAccountLinkService;
@@ -18,6 +21,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SpotifyTrackResolverService {
 
+    private static final int PLAYLIST_PAGE_LIMIT = 50;
+    private static final String PLAYLIST_TRACK_FIELDS = "items(is_local,track(id,name,uri,duration_ms,artists(name))),next,limit,offset,total";
+
     private final SpotifyAccountLinkService spotifyAccountLinkService;
     private final SpotifyTrackClient spotifyTrackClient;
     private final SpotifyPlaylistClient spotifyPlaylistClient;
@@ -33,11 +39,33 @@ public class SpotifyTrackResolverService {
 
     public Mono<List<Track>> resolvePlaylist(long discordUserId, String spotifyPlaylistId) {
         return spotifyAccountLinkService.getValidAccessToken(discordUserId)
-            .flatMap(token -> spotifyPlaylistClient.getPlaylistTracks(token, spotifyPlaylistId))
-            .flatMapMany(page -> Flux.fromIterable(page.items()))
+            .flatMapMany(token -> playlistTrackPages(token, spotifyPlaylistId, 0))
+            .flatMap(page -> Flux.fromIterable(page.items()))
             .filter(item -> !item.isLocal())
             .flatMap(this::resolvePlaylistTrackItem)
             .collectList();
+    }
+
+    private Flux<SpotifyPlaylistTracksPage> playlistTrackPages(SpotifyAccessToken token, String playlistId, int offset) {
+        return spotifyPlaylistClient.getPlaylistTracks(token, playlistTracksRequest(playlistId, offset))
+            .expand(page -> nextPlaylistTracksPage(token, playlistId, page));
+    }
+
+    private Mono<SpotifyPlaylistTracksPage> nextPlaylistTracksPage(SpotifyAccessToken token, String playlistId, SpotifyPlaylistTracksPage page) {
+        if (page.next().isEmpty()) {
+            return Mono.empty();
+        }
+        return spotifyPlaylistClient.getPlaylistTracks(token, playlistTracksRequest(playlistId, page.offset() + page.limit()));
+    }
+
+    private SpotifyPlaylistTracksRequest playlistTracksRequest(String playlistId, int offset) {
+        return new SpotifyPlaylistTracksRequest(
+            playlistId,
+            PLAYLIST_PAGE_LIMIT,
+            offset,
+            PLAYLIST_TRACK_FIELDS,
+            null
+        );
     }
 
     private Mono<Track> resolvePlaylistTrackItem(SpotifyPlaylistTrackItem item) {
