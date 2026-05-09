@@ -1,5 +1,6 @@
 package com.gammatunes.service.playback;
 
+import com.gammatunes.component.spotify.control.SpotifyControlSession;
 import com.gammatunes.model.dto.RequesterInfo;
 import dev.arbjerg.lavalink.client.player.Track;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -12,6 +13,7 @@ public record PlaybackRequest(
     long voiceChannelId,
     TextChannel textChannel,
     RequesterInfo requesterInfo,
+    SpotifyControlSession spotifyControlSession,
     List<Track> tracks,
     PlaybackMode mode
 ) {

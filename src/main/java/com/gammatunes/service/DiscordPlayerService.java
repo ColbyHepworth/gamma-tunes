@@ -6,7 +6,7 @@ import com.gammatunes.exception.player.MemberNotInVoiceChannelException;
 import com.gammatunes.component.audio.core.PlayerRegistry;
 import com.gammatunes.model.dto.RequesterInfo;
 import com.gammatunes.service.playback.PlaybackMode;
-import com.gammatunes.service.playback.PlaybackRequest;
+import com.gammatunes.service.playback.PlaybackRequestFactory;
 import com.gammatunes.service.playback.PlaybackService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +30,7 @@ public class DiscordPlayerService {
     private final PlayerRegistry playerRegistry;
     private final PlayInputResolverService playInputResolverService;
     private final PlaybackService playbackService;
+    private final PlaybackRequestFactory playbackRequestFactory;
     private final DiscordVoiceConnector discordVoiceConnector;
     private final PlayerPanelService playerPanelService;
 
@@ -62,7 +63,7 @@ public class DiscordPlayerService {
             RequesterInfo requesterInfo = RequesterInfo.fromMember(member);
 
             return playInputResolverService.resolveAll(member.getIdLong(), query)
-                .flatMap(tracks -> playbackService.play(new PlaybackRequest(
+                .flatMap(tracks -> playbackService.play(playbackRequestFactory.create(
                     guildId,
                     audioChannel.getIdLong(),
                     textChannel,
@@ -102,7 +103,7 @@ public class DiscordPlayerService {
             RequesterInfo requesterInfo = RequesterInfo.fromMember(member);
 
             return playInputResolverService.resolveOne(member.getIdLong(), query)
-                .flatMap(track -> playbackService.play(new PlaybackRequest(
+                .flatMap(track -> playbackService.play(playbackRequestFactory.create(
                     guildId,
                     audioChannel.getIdLong(),
                     textChannel,
