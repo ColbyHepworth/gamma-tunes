@@ -1,0 +1,76 @@
+### Refresh Spotify access token
+# @name refreshSpotifyToken
+POST https://accounts.spotify.com/api/token
+Authorization: Basic {{spotify_client_id}} {{spotify_client_secret}}
+Accept: application/json
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&refresh_token={{spotify_refresh_token}}
+
+> {%
+    client.global.set("spotify_access_token", response.body.access_token);
+%}
+
+### Get playlist
+GET https://api.spotify.com/v1/playlists/{{spotify_test_playlist_id}}
+Authorization: Bearer {{spotify_access_token}}
+
+### Get playlist tracks
+GET https://api.spotify.com/v1/playlists/{{spotify_test_playlist_id}}/tracks?limit=10&offset=0
+Authorization: Bearer {{spotify_access_token}}
+
+### Get playback state
+GET https://api.spotify.com/v1/me/player
+Authorization: Bearer {{spotify_access_token}}
+
+### Get currently playing
+GET https://api.spotify.com/v1/me/player/currently-playing
+Authorization: Bearer {{spotify_access_token}}
+
+### Get queue
+GET https://api.spotify.com/v1/me/player/queue
+Authorization: Bearer {{spotify_access_token}}
+
+### Resume playback
+PUT https://api.spotify.com/v1/me/player/play
+Authorization: Bearer {{spotify_access_token}}
+
+### Start test track
+PUT https://api.spotify.com/v1/me/player/play
+Authorization: Bearer {{spotify_access_token}}
+Content-Type: application/json
+
+{
+  "uris": [
+    "{{spotify_test_track_uri}}"
+  ],
+  "position_ms": 0
+}
+
+### Pause playback
+PUT https://api.spotify.com/v1/me/player/pause
+Authorization: Bearer {{spotify_access_token}}
+
+### Skip to next
+POST https://api.spotify.com/v1/me/player/next
+Authorization: Bearer {{spotify_access_token}}
+
+### Skip to previous
+POST https://api.spotify.com/v1/me/player/previous
+Authorization: Bearer {{spotify_access_token}}
+
+### Seek to position
+PUT https://api.spotify.com/v1/me/player/seek?position_ms={{spotify_seek_position_ms}}
+Authorization: Bearer {{spotify_access_token}}
+
+### Set repeat mode
+PUT https://api.spotify.com/v1/me/player/repeat?state={{spotify_repeat_state}}
+Authorization: Bearer {{spotify_access_token}}
+
+### Set playback volume
+PUT https://api.spotify.com/v1/me/player/volume?volume_percent={{spotify_volume_percent}}
+Authorization: Bearer {{spotify_access_token}}
+
+### Toggle playback shuffle
+PUT https://api.spotify.com/v1/me/player/shuffle?state={{spotify_shuffle_state}}
+Authorization: Bearer {{spotify_access_token}}
