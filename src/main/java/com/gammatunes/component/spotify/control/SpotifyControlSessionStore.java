@@ -11,10 +11,17 @@ public class SpotifyControlSessionStore {
 
     private final ConcurrentHashMap<Long, SpotifyControlSession> sessionsByGuildId = new ConcurrentHashMap<>();
 
-    public SpotifyControlSession startControl(long guildId, long controllingDiscordUserId) {
+    public SpotifyControlSession startControl(
+        long guildId,
+        long controllingDiscordUserId,
+        long voiceChannelId,
+        Long textChannelId
+    ) {
         SpotifyControlSession session = new SpotifyControlSession(
             guildId,
             controllingDiscordUserId,
+            voiceChannelId,
+            textChannelId,
             Instant.now()
         );
         sessionsByGuildId.put(guildId, session);

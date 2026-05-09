@@ -1,11 +1,14 @@
 package com.gammatunes.component.discord.interaction.command.spotify;
 
 import com.gammatunes.component.discord.interaction.command.AbstractBotCommand;
+import com.gammatunes.exception.player.MemberNotInVoiceChannelException;
 import com.gammatunes.service.SpotifyAccountLinkService;
+import com.gammatunes.service.SpotifyControlPlaybackService;
 import com.gammatunes.service.SpotifyControlService;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -28,6 +31,7 @@ public class SpotifyCommand extends AbstractBotCommand {
 
     private final SpotifyAccountLinkService spotifyAccountLinkService;
     private final SpotifyControlService spotifyControlService;
+    private final SpotifyControlPlaybackService spotifyControlPlaybackService;
 
     @Override
     public CommandData getCommandData() {
@@ -69,12 +73,18 @@ public class SpotifyCommand extends AbstractBotCommand {
     private Mono<CommandResult> startControl(SlashCommandInteractionEvent event) {
         Member member = member(event);
         Guild guild = guild(event);
+        long voiceChannelId = voiceChannelId(member);
+        Long textChannelId = event.getChannel() instanceof TextChannel textChannel
+            ? textChannel.getIdLong()
+            : null;
 
-        return spotifyControlService.startControl(guild.getIdLong(), member.getIdLong())
-            .thenReturn(CommandResult.toast(
-                "Spotify control enabled. This server is now using your Spotify account.",
-                true
-            ))
+        return spotifyControlService.startControl(guild.getIdLong(), member.getIdLong(), voiceChannelId, textChannelId)
+            .flatMap(session -> spotifyControlPlaybackService.syncNow(session.guildId())
+                .onErrorResume(error -> Mono.empty())
+                .thenReturn(CommandResult.toast(
+                    "Spotify control enabled. This server is now using your Spotify account.",
+                    true
+                )))
             .onErrorResume(IllegalArgumentException.class, error -> Mono.just(CommandResult.toast(
                 connectMessage(event) + "\n\nRun `/spotify control start` again after connecting.",
                 true
@@ -121,5 +131,13 @@ public class SpotifyCommand extends AbstractBotCommand {
 
     private Guild guild(SlashCommandInteractionEvent event) {
         return Objects.requireNonNull(event.getGuild(), "Guild cannot be null");
+    }
+
+    private long voiceChannelId(Member member) {
+        var voiceState = member.getVoiceState();
+        if (voiceState == null || voiceState.getChannel() == null) {
+            throw new MemberNotInVoiceChannelException("Member must be in a voice channel to start Spotify control.");
+        }
+        return voiceState.getChannel().getIdLong();
     }
 }

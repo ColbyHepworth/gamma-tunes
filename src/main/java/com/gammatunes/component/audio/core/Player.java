@@ -156,8 +156,12 @@ public class Player {
      */
     public Mono<Void> playNow(Track track) {
         log.debug("Playing track immediately: {}", track.getInfo().getTitle());
+        boolean wasEmpty = trackScheduler.isEmpty();
         trackScheduler.push(track);
         publishUIState();
+        if (wasEmpty) {
+            return playCurrentTrack();
+        }
         return skip();
     }
 
