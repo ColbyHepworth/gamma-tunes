@@ -75,7 +75,7 @@ public class SpotifyTrackResolverService {
             .orElseGet(Mono::empty);
     }
 
-    private Mono<Track> resolveSpotifyTrack(SpotifyTrack spotifyTrack) {
+    public Mono<Track> resolveSpotifyTrack(SpotifyTrack spotifyTrack) {
         return trackQueryService.resolve(spotifyTrackSearchQueryFormatter.format(spotifyTrack));
     }
 }
