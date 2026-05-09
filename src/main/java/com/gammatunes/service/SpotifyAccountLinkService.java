@@ -3,6 +3,7 @@ package com.gammatunes.service;
 import com.gammatunes.component.spotify.SpotifyAuthService;
 import com.gammatunes.component.spotify.api.response.SpotifyToken;
 import com.gammatunes.component.spotify.auth.LinkedSpotifyAccount;
+import com.gammatunes.component.spotify.auth.SpotifyAccessToken;
 import com.gammatunes.component.spotify.auth.SpotifyTokenStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SpotifyAccountLinkService {
 
     private static final Duration PENDING_AUTH_TTL = Duration.ofMinutes(10);
+    private static final Duration ACCESS_TOKEN_REFRESH_BUFFER = Duration.ofSeconds(60);
     private static final List<String> DEFAULT_SCOPES = List.of(
         "user-read-currently-playing",
         "user-read-playback-state",
@@ -68,6 +70,20 @@ public class SpotifyAccountLinkService {
         return spotifyTokenStore.findByDiscordUserId(discordUserId);
     }
 
+    public Mono<SpotifyAccessToken> getValidAccessToken(long discordUserId) {
+        LinkedSpotifyAccount existing = spotifyTokenStore.findByDiscordUserId(discordUserId).orElse(null);
+        if (existing == null) {
+            return Mono.error(new IllegalArgumentException("No Spotify account is linked for this Discord user."));
+        }
+
+        if (!isExpiredOrExpiringSoon(existing)) {
+            return Mono.just(accessToken(existing));
+        }
+
+        return refreshTokens(discordUserId)
+            .map(this::accessToken);
+    }
+
     private LinkedSpotifyAccount toLinkedAccount(PendingSpotifyAuth pending, SpotifyToken tokens) {
         return new LinkedSpotifyAccount(
             pending.discordUserId(),
@@ -94,6 +110,14 @@ public class SpotifyAccountLinkService {
             tokens.scope(),
             tokens.tokenType()
         );
+    }
+
+    private boolean isExpiredOrExpiringSoon(LinkedSpotifyAccount account) {
+        return account.expiresAt().isBefore(Instant.now().plus(ACCESS_TOKEN_REFRESH_BUFFER));
+    }
+
+    private SpotifyAccessToken accessToken(LinkedSpotifyAccount account) {
+        return new SpotifyAccessToken(account.accessToken());
     }
 
     private String generateState() {
