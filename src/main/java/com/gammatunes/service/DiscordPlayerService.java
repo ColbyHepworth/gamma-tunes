@@ -1,13 +1,13 @@
 package com.gammatunes.service;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gammatunes.component.audio.core.Player;
-import com.gammatunes.model.dto.RequesterInfo;
 import com.gammatunes.component.discord.DiscordVoiceConnector;
 import com.gammatunes.exception.player.MemberNotInVoiceChannelException;
 import com.gammatunes.component.audio.core.PlayerRegistry;
-import dev.arbjerg.lavalink.client.player.Track;
+import com.gammatunes.model.dto.RequesterInfo;
+import com.gammatunes.service.playback.PlaybackMode;
+import com.gammatunes.service.playback.PlaybackRequest;
+import com.gammatunes.service.playback.PlaybackService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Member;
@@ -15,6 +15,8 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 /**
  * Service for managing player interactions in Discord.
@@ -27,6 +29,7 @@ public class DiscordPlayerService {
 
     private final PlayerRegistry playerRegistry;
     private final PlayInputResolverService playInputResolverService;
+    private final PlaybackService playbackService;
     private final DiscordVoiceConnector discordVoiceConnector;
     private final PlayerPanelService playerPanelService;
 
@@ -58,22 +61,15 @@ public class DiscordPlayerService {
             long guildId = member.getGuild().getIdLong();
             RequesterInfo requesterInfo = RequesterInfo.fromMember(member);
 
-            Mono<Void> playMono = discordVoiceConnector.connect(guildId, audioChannel.getIdLong())
-                .then(playInputResolverService.resolveAll(member.getIdLong(), query))
-                .map(tracks -> tracks.stream()
-                    .map(track -> attachRequester(track, requesterInfo))
-                    .toList())
-                .flatMap(tracks -> playerRegistry.getOrCreate(guildId)
-                    .flatMap(player -> tracks.size() == 1
-                        ? player.play(tracks.getFirst())
-                        : player.playAll(tracks)));
-
-            if (textChannel != null && playerPanelService.getMessage(guildId).isEmpty()) {
-                return playMono
-                    .then(Mono.defer(() -> playerPanelService.createPanel(guildId, textChannel)));
-            }
-
-            return playMono;
+            return playInputResolverService.resolveAll(member.getIdLong(), query)
+                .flatMap(tracks -> playbackService.play(new PlaybackRequest(
+                    guildId,
+                    audioChannel.getIdLong(),
+                    textChannel,
+                    requesterInfo,
+                    tracks,
+                    PlaybackMode.QUEUE
+                )));
         });
     }
 
@@ -105,18 +101,15 @@ public class DiscordPlayerService {
             long guildId = member.getGuild().getIdLong();
             RequesterInfo requesterInfo = RequesterInfo.fromMember(member);
 
-            Mono<Void> playNowMono = discordVoiceConnector.connect(guildId, audioChannel.getIdLong())
-                .then(playInputResolverService.resolveOne(member.getIdLong(), query))
-                .map(track -> attachRequester(track, requesterInfo))
-                .flatMap(track -> playerRegistry.getOrCreate(guildId)
-                    .flatMap(player -> player.playNow(track)));
-
-            if (textChannel != null && playerPanelService.getMessage(guildId).isEmpty()) {
-                return playNowMono
-                    .then(Mono.defer(() -> playerPanelService.createPanel(guildId, textChannel)));
-            }
-
-            return playNowMono;
+            return playInputResolverService.resolveOne(member.getIdLong(), query)
+                .flatMap(track -> playbackService.play(new PlaybackRequest(
+                    guildId,
+                    audioChannel.getIdLong(),
+                    textChannel,
+                    requesterInfo,
+                    List.of(track),
+                    PlaybackMode.PLAY_NOW
+                )));
         });
     }
 
@@ -256,24 +249,4 @@ public class DiscordPlayerService {
         return voiceState.getChannel();
     }
 
-    /**
-     * Attaches requester information to the track's user data.
-     *
-     * @param track The track to attach the requester info to.
-     * @param requesterInfo The requester information.
-     * @return The track with attached requester info.
-     */
-    private Track attachRequester(Track track, RequesterInfo requesterInfo) {
-        if (requesterInfo == null) {
-            return track;
-        }
-        ObjectNode node = JsonNodeFactory.instance.objectNode();
-        node.put("userId", requesterInfo.userId());
-        node.put("displayName", requesterInfo.displayName());
-        if (requesterInfo.avatarUrl() != null) {
-            node.put("avatarUrl", requesterInfo.avatarUrl());
-        }
-        track.setUserData(node);
-        return track;
-    }
 }
