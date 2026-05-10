@@ -31,6 +31,7 @@ public class DiscordPlayerService {
     private final PlayInputResolverService playInputResolverService;
     private final PlaybackService playbackService;
     private final PlaybackRequestFactory playbackRequestFactory;
+    private final SpotifyControlService spotifyControlService;
     private final DiscordVoiceConnector discordVoiceConnector;
     private final PlayerPanelService playerPanelService;
 
@@ -225,6 +226,7 @@ public class DiscordPlayerService {
                 log.warn("Player stop failed for guild {}", guildId, error);
                 return Mono.empty();
             })
+            .then(spotifyControlService.stopControl(guildId).then())
             .then(playerPanelService.deletePanel(guildId).onErrorResume(error -> {
                 log.warn("Panel delete failed for guild {}", guildId, error);
                 return Mono.empty();

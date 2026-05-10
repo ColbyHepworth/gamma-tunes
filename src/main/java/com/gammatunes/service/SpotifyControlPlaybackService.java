@@ -13,10 +13,13 @@ import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +32,27 @@ public class SpotifyControlPlaybackService {
     private final PlaybackRequestFactory playbackRequestFactory;
     private final PlaybackService playbackService;
     private final JDA jda;
+    private final Set<Long> syncingGuildIds = ConcurrentHashMap.newKeySet();
 
     public Mono<Void> syncNow(long guildId) {
+        return Mono.defer(() -> {
+            if (!syncingGuildIds.add(guildId)) {
+                return Mono.empty();
+            }
+
+            return syncNowInternal(guildId)
+                .doFinally(signalType -> syncingGuildIds.remove(guildId));
+        });
+    }
+
+    public Mono<Void> syncControlledGuilds() {
+        return Flux.fromIterable(spotifyControlService.getControlSessions())
+            .flatMap(session -> syncNow(session.guildId())
+                .onErrorResume(error -> Mono.empty()), 4)
+            .then();
+    }
+
+    private Mono<Void> syncNowInternal(long guildId) {
         SpotifyControlSession session = spotifyControlService.getControlSession(guildId).orElse(null);
         if (session == null) {
             return Mono.error(new IllegalArgumentException("Spotify control is not enabled for this server."));

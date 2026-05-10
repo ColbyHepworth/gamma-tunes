@@ -3,6 +3,8 @@ package com.gammatunes.component.spotify.control;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,6 +36,10 @@ public class SpotifyControlSessionStore {
 
     public boolean isControlled(long guildId) {
         return sessionsByGuildId.containsKey(guildId);
+    }
+
+    public Collection<SpotifyControlSession> getControlSessions() {
+        return List.copyOf(sessionsByGuildId.values());
     }
 
     public Optional<SpotifyControlSession> stopControl(long guildId) {

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.Collection;
 import java.util.Optional;
 
 @Service
@@ -51,5 +52,9 @@ public class SpotifyControlService {
 
     public boolean isControlled(long guildId) {
         return spotifyControlSessionStore.isControlled(guildId);
+    }
+
+    public Collection<SpotifyControlSession> getControlSessions() {
+        return spotifyControlSessionStore.getControlSessions();
     }
 }

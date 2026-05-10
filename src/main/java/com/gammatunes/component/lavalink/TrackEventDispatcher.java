@@ -1,12 +1,14 @@
 package com.gammatunes.component.lavalink;
 
 import com.gammatunes.component.audio.core.PlayerRegistry;
+import com.gammatunes.service.SpotifyControlPlaybackService;
 import dev.arbjerg.lavalink.client.LavalinkClient;
 import dev.arbjerg.lavalink.client.event.PlayerUpdateEvent;
 import dev.arbjerg.lavalink.client.event.TrackEndEvent;
 import dev.arbjerg.lavalink.client.event.TrackExceptionEvent;
 import dev.arbjerg.lavalink.client.event.TrackStartEvent;
 import dev.arbjerg.lavalink.client.event.TrackStuckEvent;
+import dev.arbjerg.lavalink.protocol.v4.Message;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class TrackEventDispatcher {
 
     private final LavalinkClient lavalinkClient;
     private final PlayerRegistry playerRegistry;
+    private final SpotifyControlPlaybackService spotifyControlPlaybackService;
 
     private Disposable.Composite subscriptions;
 
@@ -92,6 +95,14 @@ public class TrackEventDispatcher {
                         return playerRegistry.get(groupByGuild.key())
                             .flatMap(player ->
                                 player.getEventHandler().onTrackEnd(event.getTrack(), event.getEndReason()))
+                            .then(Mono.defer(() -> shouldSyncAfterTrackEnd(event)
+                                ? spotifyControlPlaybackService.syncNow(groupByGuild.key())
+                                    .onErrorResume(syncError -> {
+                                        log.debug("Spotify control track-end sync skipped guild={}: {}",
+                                            groupByGuild.key(), describe(syncError));
+                                        return Mono.empty();
+                                    })
+                                : Mono.empty()))
                             .doOnSuccess(ignored ->
                                 log.debug("TrackEnd handled guild={} in {}ms",
                                     groupByGuild.key(), msSince(startedNanos)))
@@ -243,6 +254,11 @@ public class TrackEventDispatcher {
      */
     private static long msSince(long startedNanos) {
         return (System.nanoTime() - startedNanos) / 1_000_000L;
+    }
+
+    private static boolean shouldSyncAfterTrackEnd(TrackEndEvent event) {
+        return event.getEndReason() == Message.EmittedEvent.TrackEndEvent.AudioTrackEndReason.FINISHED
+            || event.getEndReason() == Message.EmittedEvent.TrackEndEvent.AudioTrackEndReason.LOAD_FAILED;
     }
 
     /**
