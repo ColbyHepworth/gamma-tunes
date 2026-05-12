@@ -44,7 +44,8 @@ public abstract class AbstractBotCommand implements BotCommand {
             .flatMap(result -> {
                 log.debug("[{}] applyResult start: {}", name(), result);
                 return applyResult(event, result, deferredEphemeral)
-                    .doOnSuccess(v -> log.debug("[{}] applyResult completed", name()));
+                    .doOnSuccess(v -> log.debug("[{}] applyResult completed", name()))
+                    .then(afterResultApplied(event, result));
             })
             .doOnSuccess(ignored -> interactionMetrics.recordCommand(name(), true, System.nanoTime() - startNanos))
             .onErrorResume(throwable -> {
@@ -60,6 +61,10 @@ public abstract class AbstractBotCommand implements BotCommand {
 
     protected Mono<CommandResult> resultAfterSuccess(SlashCommandInteractionEvent event) {
         return Mono.just(CommandResult.none());
+    }
+
+    protected Mono<Void> afterResultApplied(SlashCommandInteractionEvent event, CommandResult result) {
+        return Mono.empty();
     }
 
     protected boolean ephemeralByDefault() { return true; }

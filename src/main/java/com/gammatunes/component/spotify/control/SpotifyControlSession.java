@@ -7,6 +7,10 @@ public record SpotifyControlSession(
     long controllingDiscordUserId,
     long voiceChannelId,
     Long textChannelId,
-    Instant startedAt
+    Instant startedAt,
+    String spotifyDeviceId,
+    Integer originalVolume,
+    boolean originallyPlaying,
+    boolean resumedByControlStart
 ) {
 }

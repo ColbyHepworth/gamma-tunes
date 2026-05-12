@@ -1,15 +1,11 @@
 package com.gammatunes.service;
 
-import com.gammatunes.component.audio.core.Player;
-import com.gammatunes.component.discord.DiscordVoiceConnector;
 import com.gammatunes.exception.player.MemberNotInVoiceChannelException;
-import com.gammatunes.component.audio.core.PlayerRegistry;
 import com.gammatunes.model.dto.RequesterInfo;
 import com.gammatunes.service.playback.PlaybackMode;
 import com.gammatunes.service.playback.PlaybackRequestFactory;
 import com.gammatunes.service.playback.PlaybackService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
@@ -22,18 +18,13 @@ import java.util.List;
  * Service for managing player interactions in Discord.
  * Provides methods to control playback, manage voice connections, and handle player state.
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DiscordPlayerService {
 
-    private final PlayerRegistry playerRegistry;
     private final PlayInputResolverService playInputResolverService;
     private final PlaybackService playbackService;
     private final PlaybackRequestFactory playbackRequestFactory;
-    private final SpotifyControlService spotifyControlService;
-    private final DiscordVoiceConnector discordVoiceConnector;
-    private final PlayerPanelService playerPanelService;
 
     /**
      * Plays a track for the specified member in their current voice channel.
@@ -124,8 +115,7 @@ public class DiscordPlayerService {
      */
     public Mono<Void> jumpToTrack(Member member, String trackIdentifier) {
         long guildId = member.getGuild().getIdLong();
-        return playerRegistry.getOrCreate(guildId)
-            .flatMap(player -> player.jumpToTrack(trackIdentifier));
+        return playbackService.jumpToTrack(guildId, trackIdentifier);
     }
 
     /**
@@ -136,7 +126,11 @@ public class DiscordPlayerService {
      */
     public Mono<Void> pause(Member member) {
         long guildId = member.getGuild().getIdLong();
-        return playerRegistry.getOrCreate(guildId).flatMap(Player::pause);
+        return pause(guildId);
+    }
+
+    public Mono<Void> pause(long guildId) {
+        return playbackService.pause(guildId);
     }
 
     /**
@@ -147,7 +141,11 @@ public class DiscordPlayerService {
      */
     public Mono<Void> resume(Member member) {
         long guildId = member.getGuild().getIdLong();
-        return playerRegistry.getOrCreate(guildId).flatMap(Player::resume);
+        return resume(guildId);
+    }
+
+    public Mono<Void> resume(long guildId) {
+        return playbackService.resume(guildId);
     }
 
     /**
@@ -158,7 +156,11 @@ public class DiscordPlayerService {
      */
     public Mono<Void> skip(Member member) {
         long guildId = member.getGuild().getIdLong();
-        return playerRegistry.getOrCreate(guildId).flatMap(Player::skip);
+        return skip(guildId);
+    }
+
+    public Mono<Void> skip(long guildId) {
+        return playbackService.skip(guildId);
     }
 
     /**
@@ -169,7 +171,11 @@ public class DiscordPlayerService {
      */
     public Mono<Void> previous(Member member) {
         long guildId = member.getGuild().getIdLong();
-        return playerRegistry.getOrCreate(guildId).flatMap(Player::previous);
+        return previous(guildId);
+    }
+
+    public Mono<Void> previous(long guildId) {
+        return playbackService.previous(guildId);
     }
 
     /**
@@ -180,9 +186,7 @@ public class DiscordPlayerService {
      */
     public Mono<Void> shuffle(Member member) {
         long guildId = member.getGuild().getIdLong();
-        return playerRegistry.getOrCreate(guildId)
-            .doOnNext(Player::shuffle)
-            .then();
+        return playbackService.shuffle(guildId);
     }
 
     /**
@@ -193,9 +197,7 @@ public class DiscordPlayerService {
      */
     public Mono<Void> toggleRepeat(Member member) {
         long guildId = member.getGuild().getIdLong();
-        return playerRegistry.getOrCreate(guildId)
-            .doOnNext(Player::toggleRepeat)
-            .then();
+        return playbackService.toggleRepeat(guildId);
     }
 
     /**
@@ -206,8 +208,7 @@ public class DiscordPlayerService {
      */
     public Mono<Boolean> getRepeat(Member member) {
         long guildId = member.getGuild().getIdLong();
-        return playerRegistry.getOrCreate(guildId)
-            .map(Player::isRepeatEnabled);
+        return playbackService.getRepeat(guildId);
     }
 
     /**
@@ -219,22 +220,11 @@ public class DiscordPlayerService {
      */
     public Mono<Void> stop(Member member) {
         long guildId = member.getGuild().getIdLong();
+        return stop(guildId);
+    }
 
-        return playerRegistry.getOrCreate(guildId)
-            .flatMap(Player::stop)
-            .onErrorResume(error -> {
-                log.warn("Player stop failed for guild {}", guildId, error);
-                return Mono.empty();
-            })
-            .then(spotifyControlService.stopControl(guildId).then())
-            .then(playerPanelService.deletePanel(guildId).onErrorResume(error -> {
-                log.warn("Panel delete failed for guild {}", guildId, error);
-                return Mono.empty();
-            }))
-            .then(discordVoiceConnector.disconnect(guildId))
-            .doFinally(signal -> {
-                playerRegistry.destroy(guildId);
-            });
+    public Mono<Void> stop(long guildId) {
+        return playbackService.stop(guildId);
     }
 
     /**

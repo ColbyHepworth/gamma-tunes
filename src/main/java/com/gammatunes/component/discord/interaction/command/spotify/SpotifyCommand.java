@@ -3,9 +3,10 @@ package com.gammatunes.component.discord.interaction.command.spotify;
 import com.gammatunes.component.discord.interaction.command.AbstractBotCommand;
 import com.gammatunes.exception.player.MemberNotInVoiceChannelException;
 import com.gammatunes.service.SpotifyAccountLinkService;
-import com.gammatunes.service.SpotifyControlPlaybackService;
 import com.gammatunes.service.SpotifyControlService;
+import com.gammatunes.service.SpotifyControlStartService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -22,6 +23,7 @@ import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class SpotifyCommand extends AbstractBotCommand {
 
     private static final String CONNECT_SUBCOMMAND = "connect";
@@ -31,7 +33,7 @@ public class SpotifyCommand extends AbstractBotCommand {
 
     private final SpotifyAccountLinkService spotifyAccountLinkService;
     private final SpotifyControlService spotifyControlService;
-    private final SpotifyControlPlaybackService spotifyControlPlaybackService;
+    private final SpotifyControlStartService spotifyControlStartService;
 
     @Override
     public CommandData getCommandData() {
@@ -70,25 +72,62 @@ public class SpotifyCommand extends AbstractBotCommand {
         return Mono.error(new IllegalArgumentException("Unknown Spotify subcommand."));
     }
 
-    private Mono<CommandResult> startControl(SlashCommandInteractionEvent event) {
-        Member member = member(event);
-        Guild guild = guild(event);
-        long voiceChannelId = voiceChannelId(member);
-        Long textChannelId = event.getChannel() instanceof TextChannel textChannel
-            ? textChannel.getIdLong()
-            : null;
+    @Override
+    protected Mono<Void> afterResultApplied(SlashCommandInteractionEvent event, CommandResult result) {
+        if (!isControlStart(event)) {
+            return Mono.empty();
+        }
 
-        return spotifyControlService.startControl(guild.getIdLong(), member.getIdLong(), voiceChannelId, textChannelId)
-            .flatMap(session -> spotifyControlPlaybackService.syncNow(session.guildId())
-                .onErrorResume(error -> Mono.empty())
-                .thenReturn(CommandResult.toast(
-                    "Spotify control enabled. This server is now using your Spotify account.",
-                    true
-                )))
-            .onErrorResume(IllegalArgumentException.class, error -> Mono.just(CommandResult.toast(
-                connectMessage(event) + "\n\nRun `/spotify control start` again after connecting.",
-                true
-            )));
+        startControlInBackground(event)
+            .subscribe(
+                ignored -> {},
+                error -> log.warn("Could not report Spotify control start result", error)
+            );
+
+        return Mono.empty();
+    }
+
+    private Mono<CommandResult> startControl(SlashCommandInteractionEvent event) {
+        return Mono.just(CommandResult.toast(
+            "Waiting for Spotify playback. Start a song in Spotify within the next minute and I will join synced.",
+            true
+        ));
+    }
+
+    private Mono<Void> startControlInBackground(SlashCommandInteractionEvent event) {
+        return Mono.defer(() -> {
+            Member member = member(event);
+            Guild guild = guild(event);
+            long voiceChannelId = voiceChannelId(member);
+            Long textChannelId = event.getChannel() instanceof TextChannel textChannel
+                ? textChannel.getIdLong()
+                : null;
+
+            return spotifyControlStartService.startControlAndPlayWhenReady(
+                guild.getIdLong(),
+                member.getIdLong(),
+                voiceChannelId,
+                textChannelId
+            );
+        })
+            .then(Mono.defer(() -> editOriginal(
+                event,
+                "Spotify control enabled. This server is now using your Spotify account."
+            )))
+            .onErrorResume(IllegalArgumentException.class, error -> editOriginal(
+                event,
+                connectMessage(event) + "\n\nRun `/spotify control start` again after connecting."
+            ))
+            .onErrorResume(error -> editOriginal(event, pretty(error)));
+    }
+
+    private Mono<Void> editOriginal(SlashCommandInteractionEvent event, String message) {
+        return Mono.fromFuture(event.getHook().editOriginal(message).submit()).then();
+    }
+
+    private String pretty(Throwable throwable) {
+        String message = throwable.getMessage();
+        return (message == null || message.isBlank()) ? throwable.getClass().getSimpleName() : message;
     }
 
     private Mono<CommandResult> stopControl(SlashCommandInteractionEvent event) {

@@ -15,10 +15,11 @@ public class SpotifyControlPlaybackStateStore {
         return Optional.ofNullable(statesByGuildId.get(guildId));
     }
 
-    public SpotifyControlPlaybackState save(long guildId, String lastSpotifyTrackId) {
+    public SpotifyControlPlaybackState save(long guildId, String lastSpotifyTrackId, boolean playing) {
         SpotifyControlPlaybackState state = new SpotifyControlPlaybackState(
             guildId,
             lastSpotifyTrackId,
+            playing,
             Instant.now()
         );
         statesByGuildId.put(guildId, state);

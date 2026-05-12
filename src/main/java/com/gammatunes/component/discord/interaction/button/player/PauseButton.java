@@ -1,7 +1,7 @@
 package com.gammatunes.component.discord.interaction.button.player;
 
 import com.gammatunes.component.discord.interaction.button.AbstractButton;
-import com.gammatunes.service.DiscordPlayerService;
+import com.gammatunes.service.playback.control.PlaybackControlService;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class PauseButton extends AbstractButton {
 
-    private final DiscordPlayerService controller;
+    private final PlaybackControlService controller;
 
     @Override public String id() { return "player:pause"; }
 

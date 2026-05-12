@@ -1,6 +1,7 @@
 package com.gammatunes.service;
 
 import com.gammatunes.component.spotify.api.response.SpotifyTrack;
+import com.gammatunes.component.spotify.control.SpotifyControlPlaybackState;
 import com.gammatunes.component.spotify.control.SpotifyControlPlaybackStateStore;
 import com.gammatunes.component.spotify.control.SpotifyControlSession;
 import com.gammatunes.component.spotify.resolver.SpotifyTrackResolverService;
@@ -55,23 +56,47 @@ public class SpotifyControlPlaybackService {
     private Mono<Void> syncNowInternal(long guildId) {
         SpotifyControlSession session = spotifyControlService.getControlSession(guildId).orElse(null);
         if (session == null) {
-            return Mono.error(new IllegalArgumentException("Spotify control is not enabled for this server."));
+            return Mono.empty();
         }
 
+        return syncSession(session);
+    }
+
+    private Mono<Void> syncSession(SpotifyControlSession session) {
         return spotifyPlayerService.getCurrentlyPlaying(session.controllingDiscordUserId())
             .flatMap(currentlyPlaying -> {
-                if (!currentlyPlaying.isPlaying() || currentlyPlaying.item().isEmpty()) {
+                long guildId = session.guildId();
+                if (!spotifyControlService.isControlled(guildId)) {
+                    return Mono.empty();
+                }
+
+                if (currentlyPlaying.item().isEmpty()) {
                     return Mono.empty();
                 }
 
                 SpotifyTrack spotifyTrack = currentlyPlaying.item().get();
-                if (isAlreadySynced(guildId, spotifyTrack.id())) {
+                boolean alreadySynced = isAlreadySynced(guildId, spotifyTrack.id());
+                boolean wasPlaying = wasPlaying(guildId);
+
+                if (!currentlyPlaying.isPlaying()) {
+                    if (alreadySynced && wasPlaying) {
+                        spotifyControlPlaybackStateStore.save(guildId, spotifyTrack.id(), false);
+                        return playbackService.pause(guildId);
+                    }
+                    return Mono.empty();
+                }
+
+                if (alreadySynced) {
+                    if (!wasPlaying) {
+                        spotifyControlPlaybackStateStore.save(guildId, spotifyTrack.id(), true);
+                        return playbackService.resume(guildId);
+                    }
                     return Mono.empty();
                 }
 
                 return spotifyTrackResolverService.resolveSpotifyTrack(spotifyTrack)
                     .flatMap(track -> playSpotifyTrack(session, track))
-                    .doOnSuccess(ignored -> spotifyControlPlaybackStateStore.save(guildId, spotifyTrack.id()));
+                    .doOnSuccess(ignored -> spotifyControlPlaybackStateStore.save(guildId, spotifyTrack.id(), true));
             });
     }
 
@@ -79,6 +104,12 @@ public class SpotifyControlPlaybackService {
         return spotifyControlPlaybackStateStore.get(guildId)
             .map(state -> Objects.equals(state.lastSpotifyTrackId(), spotifyTrackId))
             .orElse(false);
+    }
+
+    private boolean wasPlaying(long guildId) {
+        return spotifyControlPlaybackStateStore.get(guildId)
+            .map(SpotifyControlPlaybackState::lastPlayingState)
+            .orElse(true);
     }
 
     private Mono<Void> playSpotifyTrack(SpotifyControlSession session, Track track) {

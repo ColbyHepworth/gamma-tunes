@@ -1,6 +1,6 @@
 package com.gammatunes.component.discord.interaction.command.player;
 
-import com.gammatunes.service.DiscordPlayerService;
+import com.gammatunes.service.playback.control.PlaybackControlService;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -17,11 +17,11 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SkipCommand extends PlayerCommand {
 
-    private final DiscordPlayerService discordPlayerService;
+    private final PlaybackControlService playbackControlService;
 
     @Override
     protected Mono<Void> handle(Member member, SlashCommandInteractionEvent event) {
-        return discordPlayerService.skip(member).then();
+        return playbackControlService.skip(member).then();
     }
 
     @Override

@@ -1,6 +1,6 @@
 package com.gammatunes.component.discord.interaction.command.player;
 
-import com.gammatunes.service.DiscordPlayerService;
+import com.gammatunes.service.playback.control.PlaybackControlService;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -17,14 +17,14 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class PreviousCommand extends PlayerCommand {
 
-    private final DiscordPlayerService discordPlayerService;
+    private final PlaybackControlService playbackControlService;
 
     @Override
     protected Mono<Void> handle(Member member, SlashCommandInteractionEvent event) {
         if (member == null) {
             return Mono.error(new IllegalStateException("This command can only be used in a server."));
         }
-        return discordPlayerService.previous(member).then();
+        return playbackControlService.previous(member).then();
     }
 
     @Override
