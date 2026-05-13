@@ -41,6 +41,10 @@ public record NodePlayer(LavalinkClient lavalink, long guildId) {
         return link().createOrUpdatePlayer().setPaused(shouldPause).then();
     }
 
+    public Mono<Void> seek(long positionMs) {
+        return link().createOrUpdatePlayer().setPosition(positionMs).then();
+    }
+
     /**
      * Skips to the next track in the queue.
      *
@@ -59,5 +63,4 @@ public record NodePlayer(LavalinkClient lavalink, long guildId) {
         return lavalink.getOrCreateLink(guildId);
     }
 }
-
 

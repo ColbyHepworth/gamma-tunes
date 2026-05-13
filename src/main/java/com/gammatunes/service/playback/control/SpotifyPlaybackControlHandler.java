@@ -1,6 +1,7 @@
 package com.gammatunes.service.playback.control;
 
 import com.gammatunes.component.spotify.api.request.SpotifyPausePlaybackRequest;
+import com.gammatunes.component.spotify.api.request.SpotifySeekPlaybackRequest;
 import com.gammatunes.component.spotify.api.request.SpotifySkipPlaybackRequest;
 import com.gammatunes.component.spotify.api.request.SpotifyStartPlaybackRequest;
 import com.gammatunes.component.spotify.control.SpotifyControlSession;
@@ -34,17 +35,18 @@ public class SpotifyPlaybackControlHandler implements PlaybackControlHandler {
             || action == PlaybackControlAction.PREVIOUS
             || action == PlaybackControlAction.PAUSE
             || action == PlaybackControlAction.RESUME
-            || action == PlaybackControlAction.STOP;
+            || action == PlaybackControlAction.STOP
+            || action == PlaybackControlAction.SEEK;
     }
 
     @Override
-    public Mono<PlaybackControlResult> handle(long guildId, PlaybackControlAction action) {
+    public Mono<PlaybackControlResult> handle(long guildId, PlaybackControlRequest request) {
         SpotifyControlSession session = spotifyControlService.getControlSession(guildId).orElse(null);
         if (session == null) {
             return Mono.just(PlaybackControlResult.NOT_HANDLED);
         }
 
-        return switch (action) {
+        return switch (request.action()) {
             case SKIP -> spotifyPlayerService
                 .skipToNext(session.controllingDiscordUserId(), new SpotifySkipPlaybackRequest(session.spotifyDeviceId()))
                 .then(syncAfterSpotifyChange(guildId))
@@ -62,6 +64,13 @@ public class SpotifyPlaybackControlHandler implements PlaybackControlHandler {
                 .thenReturn(PlaybackControlResult.HANDLED_CONTINUE);
             case STOP -> spotifyControlService.stopControl(guildId)
                 .thenReturn(PlaybackControlResult.HANDLED_CONTINUE);
+            case SEEK -> spotifyPlayerService
+                .seekToPosition(
+                    session.controllingDiscordUserId(),
+                    new SpotifySeekPlaybackRequest(Math.toIntExact(request.requiredPositionMs()), session.spotifyDeviceId())
+                )
+                .then(syncAfterSpotifyChange(guildId))
+                .thenReturn(PlaybackControlResult.HANDLED);
             default -> Mono.just(PlaybackControlResult.NOT_HANDLED);
         };
     }

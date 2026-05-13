@@ -5,5 +5,6 @@ public enum PlaybackControlAction {
     PREVIOUS,
     PAUSE,
     RESUME,
-    STOP
+    STOP,
+    SEEK
 }

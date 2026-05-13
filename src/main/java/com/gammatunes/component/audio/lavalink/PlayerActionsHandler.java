@@ -69,4 +69,13 @@ public record PlayerActionsHandler(NodePlayer nodePlayer) {
                 return Mono.empty();
             });
     }
+
+    public Mono<Void> seekTrack(long positionMs) {
+        long guildId = nodePlayer.guildId();
+        return nodePlayer.seek(positionMs)
+            .onErrorResume(ex -> {
+                log.error("Error seeking track for guild {}", guildId, ex);
+                return Mono.empty();
+            });
+    }
 }

@@ -8,5 +8,5 @@ public interface PlaybackControlHandler {
 
     boolean supports(PlaybackControlAction action);
 
-    Mono<PlaybackControlResult> handle(long guildId, PlaybackControlAction action);
+    Mono<PlaybackControlResult> handle(long guildId, PlaybackControlRequest request);
 }

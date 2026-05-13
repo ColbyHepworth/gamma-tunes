@@ -260,6 +260,24 @@ public class Player {
             });
     }
 
+    public Mono<Void> seek(long positionMs) {
+        if (positionMs < 0) {
+            return Mono.error(new IllegalArgumentException("Seek position cannot be negative."));
+        }
+
+        long previousPosition = this.positionMs;
+        this.positionMs = positionMs;
+        publishPosition();
+
+        return playerActionsHandler.seekTrack(positionMs)
+            .onErrorResume(e -> {
+                log.warn("Seek failed for guild {}, rolling back: {}", guildId, e.toString());
+                this.positionMs = previousPosition;
+                publishPosition();
+                return Mono.error(e);
+            });
+    }
+
     /**
      * Jumps to a specific track by its identifier.
      * If the track is found, it starts playback of that track.

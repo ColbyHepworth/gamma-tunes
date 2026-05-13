@@ -22,13 +22,14 @@ public class LavalinkPlaybackControlHandler implements PlaybackControlHandler {
     }
 
     @Override
-    public Mono<PlaybackControlResult> handle(long guildId, PlaybackControlAction action) {
-        Mono<Void> control = switch (action) {
+    public Mono<PlaybackControlResult> handle(long guildId, PlaybackControlRequest request) {
+        Mono<Void> control = switch (request.action()) {
             case SKIP -> playbackService.skip(guildId);
             case PREVIOUS -> playbackService.previous(guildId);
             case PAUSE -> playbackService.pause(guildId);
             case RESUME -> playbackService.resume(guildId);
             case STOP -> playbackService.stop(guildId);
+            case SEEK -> playbackService.seek(guildId, request.requiredPositionMs());
         };
 
         return control.thenReturn(PlaybackControlResult.HANDLED);

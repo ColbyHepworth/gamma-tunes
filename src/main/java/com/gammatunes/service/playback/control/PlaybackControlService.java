@@ -40,26 +40,34 @@ public class PlaybackControlService {
         return handle(member.getGuild().getIdLong(), PlaybackControlAction.STOP);
     }
 
+    public Mono<Void> seek(Member member, long positionMs) {
+        return handle(member.getGuild().getIdLong(), PlaybackControlRequest.seek(positionMs));
+    }
+
     public Mono<Void> handle(long guildId, PlaybackControlAction action) {
-        return handle(guildId, action, 0)
+        return handle(guildId, PlaybackControlRequest.of(action));
+    }
+
+    public Mono<Void> handle(long guildId, PlaybackControlRequest request) {
+        return handle(guildId, request, 0)
             .then();
     }
 
-    private Mono<PlaybackControlResult> handle(long guildId, PlaybackControlAction action, int index) {
+    private Mono<PlaybackControlResult> handle(long guildId, PlaybackControlRequest request, int index) {
         if (index >= handlers.size()) {
             return Mono.empty();
         }
 
         PlaybackControlHandler handler = handlers.get(index);
-        if (!handler.supports(action)) {
-            return handle(guildId, action, index + 1);
+        if (!handler.supports(request.action())) {
+            return handle(guildId, request, index + 1);
         }
 
-        return handler.handle(guildId, action)
+        return handler.handle(guildId, request)
             .flatMap(result -> {
                 log.debug(
                     "Playback control action={} guild={} handler={} result={}",
-                    action,
+                    request.action(),
                     guildId,
                     handler.getClass().getSimpleName(),
                     result
@@ -69,7 +77,7 @@ public class PlaybackControlService {
                     return Mono.just(result);
                 }
 
-                return handle(guildId, action, index + 1)
+                return handle(guildId, request, index + 1)
                     .defaultIfEmpty(result);
             });
     }

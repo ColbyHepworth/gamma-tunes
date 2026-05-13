@@ -120,7 +120,16 @@ public class SpotifyControlStartService {
         SpotifyTrack spotifyTrack = currentlyPlaying.item().get();
         return spotifyTrackResolverService.resolveSpotifyTrack(spotifyTrack)
             .flatMap(track -> playSpotifyTrack(session, track))
+            .then(seekToSpotifyProgress(session.guildId(), currentlyPlaying.progressMs().orElse(null)))
             .doOnSuccess(ignored -> spotifyControlPlaybackStateStore.save(session.guildId(), spotifyTrack.id(), true));
+    }
+
+    private Mono<Void> seekToSpotifyProgress(long guildId, Integer spotifyProgressMs) {
+        if (spotifyProgressMs == null || spotifyProgressMs <= 0) {
+            return Mono.empty();
+        }
+
+        return playbackService.seek(guildId, spotifyProgressMs);
     }
 
     private Mono<Void> playSpotifyTrack(SpotifyControlSession session, Track track) {

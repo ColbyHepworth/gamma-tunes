@@ -41,6 +41,16 @@ public class PlaybackService {
         return playerRegistry.getOrCreate(guildId).flatMap(Player::previous);
     }
 
+    public Mono<Void> seek(long guildId, long positionMs) {
+        return playerRegistry.getOrCreate(guildId)
+            .flatMap(player -> player.seek(positionMs));
+    }
+
+    public Mono<Long> getPositionMs(long guildId) {
+        return playerRegistry.getOrCreate(guildId)
+            .map(Player::getPositionMs);
+    }
+
     public Mono<Void> jumpToTrack(long guildId, String trackIdentifier) {
         return playerRegistry.getOrCreate(guildId)
             .flatMap(player -> player.jumpToTrack(trackIdentifier));

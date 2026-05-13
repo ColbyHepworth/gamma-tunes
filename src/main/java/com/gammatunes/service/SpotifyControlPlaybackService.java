@@ -26,6 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class SpotifyControlPlaybackService {
 
+    private static final long SPOTIFY_SEEK_DRIFT_THRESHOLD_MS = 2_500L;
+
     private final SpotifyControlService spotifyControlService;
     private final SpotifyPlayerService spotifyPlayerService;
     private final SpotifyTrackResolverService spotifyTrackResolverService;
@@ -89,14 +91,40 @@ public class SpotifyControlPlaybackService {
                 if (alreadySynced) {
                     if (!wasPlaying) {
                         spotifyControlPlaybackStateStore.save(guildId, spotifyTrack.id(), true);
-                        return playbackService.resume(guildId);
+                        return playbackService.resume(guildId)
+                            .then(seekIfDrifted(guildId, currentlyPlaying.progressMs().orElse(null)));
                     }
-                    return Mono.empty();
+                    return seekIfDrifted(guildId, currentlyPlaying.progressMs().orElse(null));
                 }
 
                 return spotifyTrackResolverService.resolveSpotifyTrack(spotifyTrack)
                     .flatMap(track -> playSpotifyTrack(session, track))
+                    .then(seekToSpotifyProgress(guildId, currentlyPlaying.progressMs().orElse(null)))
                     .doOnSuccess(ignored -> spotifyControlPlaybackStateStore.save(guildId, spotifyTrack.id(), true));
+            });
+    }
+
+    private Mono<Void> seekToSpotifyProgress(long guildId, Integer spotifyProgressMs) {
+        if (spotifyProgressMs == null || spotifyProgressMs <= 0) {
+            return Mono.empty();
+        }
+
+        return playbackService.seek(guildId, spotifyProgressMs);
+    }
+
+    private Mono<Void> seekIfDrifted(long guildId, Integer spotifyProgressMs) {
+        if (spotifyProgressMs == null) {
+            return Mono.empty();
+        }
+
+        return playbackService.getPositionMs(guildId)
+            .flatMap(discordPositionMs -> {
+                long driftMs = Math.abs(discordPositionMs - spotifyProgressMs);
+                if (driftMs <= SPOTIFY_SEEK_DRIFT_THRESHOLD_MS) {
+                    return Mono.empty();
+                }
+
+                return playbackService.seek(guildId, spotifyProgressMs);
             });
     }
 
